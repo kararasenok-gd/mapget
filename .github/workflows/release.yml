@@ -58,7 +58,9 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Build with Gradle
-        run: ./gradlew build
+        run: |
+          chmod +x gradlew
+          ./gradlew build
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
