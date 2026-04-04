@@ -1,6 +1,7 @@
 map:
-  # true = maps will be saved in RAM. After restart all maps will be cleared
-  # false = maps will be saved in database.db
+  # Should maps be stored in RAM?
+  # true = maps will be stored in RAM. After restart all maps will be cleared
+  # false = maps will be stored in database.db and local storage
   # Default = false
   temp: false
 
