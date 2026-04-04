@@ -1,0 +1,30 @@
+map:
+  # true = maps will be saved in RAM. After restart all maps will be cleared
+  # false = maps will be saved in database.db
+  # Default = false
+  temp: false
+
+  # Default name of maps given through /map get command
+  # Variables:
+  #   %id% - ID of map
+  # Default = §6Image #%id%
+  name: "§6Image #%id%"
+
+  # Default value for crop argument
+  # true - Image will be cropped
+  # false - Image will be resized to 1:1 ratio
+  # Default = false
+  cropDefault: false
+
+connection:
+  # URL connection timeout in milliseconds.
+  # Default = 5000 ms (5 seconds)
+  timeout: 5000
+
+  # Connection content reading timeout in milliseconds.
+  # Default = 10000 ms (10 seconds)
+  readTimeout: 10000
+
+  # Max file size in megabytes
+  # Default = 8 mb
+  maxSize: 8

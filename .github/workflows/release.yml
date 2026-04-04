@@ -1,0 +1,74 @@
+name: Build and Release Paper Plugin
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - 'README.md'
+      - '.gitignore'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Get version from gradle.properties
+        id: get_version
+        run: |
+          VERSION=$(grep "^version=" gradle.properties | cut -d'=' -f2 | xargs)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Generate Changelog
+        id: changelog
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          REPO_URL="https://github.com/${{ github.repository }}"
+          
+          echo "### Changelog:" > changelog.md
+          
+          git log -n 5 --pretty=format:"* [%h]($REPO_URL/commit/%H) - %s" >> changelog.md
+          
+          echo -e "\n\n---" >> changelog.md
+          
+          if [ -z "$PREV_TAG" ]; then
+            echo "This is first release." >> changelog.md
+          else
+            echo "[Full changelog ($PREV_TAG...current)]($REPO_URL/compare/$PREV_TAG...${{ github.sha }})" >> changelog.md
+          fi
+          
+          {
+            echo 'body<<EOF'
+            cat changelog.md
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.get_version.outputs.VERSION }}
+          name: v${{ steps.get_version.outputs.VERSION }}
+          body: ${{ steps.changelog.outputs.body }}
+          draft: false
+          prerelease: false
+          files: |
+            build/libs/*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,17 @@
+name: mapget
+version: '1.0.0'
+main: space.kararasenok.mapget.Mapget
+api-version: '1.21'
+
+permissions:
+  mapget.reload:
+    description: Allows access to the /map reload command
+    default: op
+  mapget.get:
+    description: Allows access to the /map get command
+    default: true
+  mapget.*:
+    description: t.me/krrsnkofc
+    children:
+      mapget.reload: true
+      mapget.get: true
