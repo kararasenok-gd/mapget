@@ -85,6 +85,14 @@ public final class Mapget extends JavaPlugin {
             };
         });
 
+        int serverVersion = Bukkit.getUnsafe().getDataVersion();
+        if (serverVersion != 4556) {
+            String serverVersionToDisplay = getServer().getMinecraftVersion();
+
+            logger.warn("Version {} has not been tested. You can continue using the plugin, but be prepared for it to have bugs or not work at all.",  serverVersionToDisplay);
+            logger.warn("If you encounter a problem, please report it here: https://github.com/kararasenok-gd/mapget/issues/");
+        }
+
         long enableTime = Instant.now().toEpochMilli() - startTime;
         logger.info("Plugin enabled successfully in {} ms!", enableTime);
     }

@@ -1,5 +1,5 @@
 name: mapget
-version: '1.0.0'
+version: '1.0.1'
 main: space.kararasenok.mapget.Mapget
 api-version: '1.21'
 
