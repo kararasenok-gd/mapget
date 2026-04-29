@@ -24,7 +24,7 @@ The compiled `.jar` file will be located in `build/libs/`.
 ## Supported Minecraft versions
 `✅ - Supported`
 `❓ - Not tested, but should work`
-`⚠️ - Not tested`
+`⚠️ - Not tested. Plugin can work incorrect`
 `❌ - Not supported`
 
 |     Version    | Support |
