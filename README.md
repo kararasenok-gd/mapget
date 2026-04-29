@@ -44,4 +44,4 @@ Here’s an example configuration with explanations:
 
 ## Found a bug or want to suggest something?
 
-[Open an issue](https://github.com/kararasenok-gd/NewDayNotifier/issues) and write anything you want to report or suggest to add!
+[Open an issue](https://github.com/kararasenok-gd/mapget/issues) and write anything you want to report or suggest to add!
