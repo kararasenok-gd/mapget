@@ -4,9 +4,12 @@ on:
   push:
     branches:
       - master
-    paths-ignore:
-      - 'README.md'
-      - '.gitignore'
+    paths:
+      - 'src/**'
+      - 'build.gradle*'
+      - 'gradle.properties'
+      - 'settings.gradle*'
+      - 'gradle/**'
 
 jobs:
   build:
@@ -33,16 +36,27 @@ jobs:
           VERSION=$(grep "^version=" gradle.properties | cut -d'=' -f2 | xargs)
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Check if Tag Exists
+        id: tag_check
+        run: |
+          if git rev-parse "v${{ steps.get_version.outputs.VERSION }}" >/dev/null 2>&1; then
+            echo "TAG_EXISTS=true" >> $GITHUB_ENV
+            echo "Tag v${{ steps.get_version.outputs.VERSION }} already exists. Skipping release."
+          else
+            echo "TAG_EXISTS=false" >> $GITHUB_ENV
+          fi
+
       - name: Generate Changelog
+        if: env.TAG_EXISTS == 'false'
         id: changelog
         run: |
           PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           REPO_URL="https://github.com/${{ github.repository }}"
           
           if [ -z "$PREV_TAG" ]; then
-            echo "This is first release." >> changelog.md
+            echo "This is first release." > changelog.md
           else
-            echo "**Full Changelog**: $REPO_URL/compare/$PREV_TAG...v${{ steps.get_version.outputs.VERSION }}" >> changelog.md
+            echo "**Full Changelog**: $REPO_URL/compare/$PREV_TAG...v${{ steps.get_version.outputs.VERSION }}" > changelog.md
           fi
           
           {
@@ -52,11 +66,13 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Build with Gradle
+        if: env.TAG_EXISTS == 'false'
         run: |
           chmod +x gradlew
           ./gradlew build
 
       - name: Create Release
+        if: env.TAG_EXISTS == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.get_version.outputs.VERSION }}
