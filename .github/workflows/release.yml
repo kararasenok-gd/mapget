@@ -51,17 +51,37 @@ jobs:
         id: changelog
         run: |
           PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
           REPO_URL="https://github.com/${{ github.repository }}"
           
+          echo "## Changes for v$VERSION" > changelog_body.md
+          echo "" >> changelog_body.md
+          
           if [ -z "$PREV_TAG" ]; then
-            echo "This is first release." > changelog.md
+            RANGE="HEAD"
           else
-            echo "**Full Changelog**: $REPO_URL/compare/$PREV_TAG...v${{ steps.get_version.outputs.VERSION }}" > changelog.md
+            RANGE="$PREV_TAG..HEAD"
+          fi
+
+          git log $RANGE --pretty=format:"%h|%H|%s" | while IFS='|' read -r short_hash long_hash subject; do
+            if echo "$subject" | grep -qE '^(feat|fix|refactor|perf|style|test|build|ci)(\(.*\))?:'; then
+              formatted_subject=$(echo "$subject" | sed -E 's/^([a-z]+(\(.*\))?:)/**\1**/')
+              echo "- [\`$short_hash\`]($REPO_URL/commit/$long_hash) $formatted_subject" >> changelog_body.md
+            fi
+          done
+            
+          if [ $(wc -l < changelog_body.md) -le 2 ]; then
+            echo "- Minor improvements and bug fixes." >> changelog_body.md
           fi
           
+          echo "" >> changelog_body.md
+          if [ ! -z "$PREV_TAG" ]; then
+            echo "**Full Changelog**: [\`$PREV_TAG...v$VERSION\`]($REPO_URL/compare/$PREV_TAG...v$VERSION)" >> changelog_body.md
+          fi
+            
           {
             echo 'body<<EOF'
-            cat changelog.md
+            cat changelog_body.md
             echo EOF
           } >> "$GITHUB_OUTPUT"
 
@@ -70,6 +90,15 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew build
+
+      - name: Prepare Plugin File
+        if: env.TAG_EXISTS == 'false'
+        id: plugin_file
+        run: |
+            JAR_PATH=$(find build/libs -name "*.jar" ! -name "*-sources.jar" ! -name "*-javadoc.jar" | head -n 1)
+            JAR_NAME=$(basename "$JAR_PATH")
+            echo "JAR_PATH=$JAR_PATH" >> $GITHUB_OUTPUT
+            echo "JAR_NAME=$JAR_NAME" >> $GITHUB_OUTPUT
 
       - name: Create Release
         if: env.TAG_EXISTS == 'false'
@@ -84,3 +113,37 @@ jobs:
             build/libs/*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload to Modrinth
+        if: env.TAG_EXISTS == 'false'
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          PROJECT_ID: ${{ secrets.MODRINTH_PROJECT_ID }}
+          VERSION: ${{ steps.get_version.outputs.VERSION }}
+          CHANGELOG: ${{ steps.changelog.outputs.body }}
+          JAR_PATH: ${{ steps.plugin_file.outputs.JAR_PATH }}
+          JAR_NAME: ${{ steps.plugin_file.outputs.JAR_NAME }}
+        run: |
+            SAFE_CHANGELOG=$(echo "$CHANGELOG" | jq -aRs .)
+            
+            DATA_JSON=$(cat <<EOF
+            {
+              "name": "mapget v$VERSION",
+              "version_number": "$VERSION",
+              "changelog": $SAFE_CHANGELOG,
+              "game_versions": ["1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4", "1.21.5", "1.21.6", "1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11", "26.1.2"],
+              "loaders": ["paper"],
+              "project_id": "$PROJECT_ID",
+              "file_parts": ["file_0"],
+              "dependencies": [],
+              "version_type": "release",
+              "featured": true
+            }
+            EOF
+            )
+            
+            curl -X POST 'https://api.modrinth.com/v2/version' \
+              --header "User-Agent: kararasenok-gd/mapget/$VERSION (kararasenok.space)" \
+              --header "Authorization: $MODRINTH_TOKEN" \
+              --form "data=$DATA_JSON" \
+              --form "file_0=@$JAR_PATH;type=application/java-archive"
