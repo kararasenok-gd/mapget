@@ -23,6 +23,7 @@ public class Reload implements Argument {
     public void handler(CommandSender sender, String[] args) {
         if (!sender.hasPermission(PERMS)) {
             sender.sendMessage(MiniMessage.deserialize("<red>You do not have permission to use this command!"));
+            return;
         }
 
         sender.sendMessage(MiniMessage.deserialize("<yellow>Reloading config..."));

@@ -15,6 +15,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Instant;
+import java.util.List;
 
 public final class Mapget extends JavaPlugin {
     private Connection conn;
@@ -24,6 +25,7 @@ public final class Mapget extends JavaPlugin {
     public void onEnable() {
 //        logger.info("Loading plugin...");
         long startTime = Instant.now().toEpochMilli();
+        List<Integer> supportedDataVersions = List.of(4671, 4556, 4790);
 
         saveDefaultConfig();
 
@@ -86,7 +88,7 @@ public final class Mapget extends JavaPlugin {
         });
 
         int serverVersion = Bukkit.getUnsafe().getDataVersion();
-        if (serverVersion != 4556) {
+        if (!supportedDataVersions.contains(serverVersion)) {
             String serverVersionToDisplay = getServer().getMinecraftVersion();
 
             logger.warn("Version {} has not been tested. You can continue using the plugin, but be prepared for it to have bugs or not work at all.",  serverVersionToDisplay);

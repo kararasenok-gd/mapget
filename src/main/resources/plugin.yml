@@ -1,5 +1,5 @@
 name: mapget
-version: '1.0.1'
+version: '1.0.2'
 main: space.kararasenok.mapget.Mapget
 api-version: '1.21'
 
@@ -11,7 +11,7 @@ permissions:
     description: Allows access to the /map get command
     default: true
   mapget.*:
-    description: t.me/krrsnkofc
+    description: :P
     children:
       mapget.reload: true
       mapget.get: true
