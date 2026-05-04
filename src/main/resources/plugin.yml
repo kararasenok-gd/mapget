@@ -11,7 +11,7 @@ permissions:
     description: Allows access to the /map get command
     default: true
   mapget.*:
-    description: t.me/krrsnkofc
+    description: :P
     children:
       mapget.reload: true
       mapget.get: true
