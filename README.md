@@ -18,7 +18,7 @@ The compiled `.jar` file will be located in `build/libs/`.
 
 ## Installing on server
 
-1. Go to [Releases](https://github.com/kararasenok-gd/NewDayNotifier/releases) tab
+1. Go to [Releases](https://github.com/kararasenok-gd/mapget/releases) tab
 2. Download `.jar` from any release
 
 ## Supported Minecraft versions
