@@ -11,6 +11,15 @@ map:
   # Default = §6Image #%id%
   name: "§6Image #%id%"
 
+  # Default lore (description) of maps.
+  # Variables:
+  #   %id% - if of map
+  #   %player% - player (his in-game name) who created this map
+  #   %url% - link to image
+  #   %timestamp% - when map was created (in UTC. Can be changed bellow). Example: 2026-05-10 14:30:05+00:00
+  # Default = §7Created by §b%player% §7at §b%timestamp%
+  lore: "§7Created by §b%player% §7at §b%timestamp%"
+
   # Default value for crop argument
   # true - Image will be cropped
   # false - Image will be resized to 1:1 ratio
@@ -36,3 +45,17 @@ connection:
   # Max file size in megabytes
   # Default = 8 mb
   maxSize: 8
+
+timestamp:
+  # Configuration for %timestamp% placeholder
+
+  # Format to display timestamp
+  # More information about timestamp formatting can be founded here: https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html#patterns
+  # Or here: https://gist.github.com/kararasenok-gd/c34f6121623db4febc846ad2f615996d
+  # Default = yyyy-MM-dd HH:mm:ssXXX
+  format: "yyyy-MM-dd HH:mm:ssXXX"
+
+  # UTC Offset
+  # List of offsets can be found here: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
+  # Default = +00:00
+  utcOffset: "+00:00"
