@@ -46,11 +46,31 @@ public class Get implements Argument {
             return;
         }
 
-        String link = args[1];
+        String link = null;
         boolean crop = plugin.getConfig().getBoolean("map.cropDefault", false);
+        boolean allowTemp = plugin.getConfig().getBoolean("map.allowTemporaryMaps", false) || player.hasPermission("mapget.temp");
+        int index = 0;
 
-        if (args.length >= 3) {
-            crop = args[2].equalsIgnoreCase("true");
+        for (int i = 1; i < args.length; i++) {
+            String arg = args[i];
+
+            if (arg.contains(":")) {
+                String[] split = arg.split(":");
+                String key = split[0];
+                String value = split[1];
+
+                switch (key) {
+                    case "url", "link", "href", "u" -> link = value;
+                    case "crop", "trim", "cut", "c" -> crop = value.equalsIgnoreCase("true");
+                }
+            } else {
+                index++;
+
+                switch (index) {
+                    case 1: link = arg;
+                    case 2: crop = arg.equalsIgnoreCase("true");
+                }
+            }
         }
 
         player.sendMessage(MiniMessage.deserialize("<gray>Creating map. Please wait..."));
