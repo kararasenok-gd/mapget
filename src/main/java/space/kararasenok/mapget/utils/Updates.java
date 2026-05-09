@@ -92,9 +92,16 @@ public class Updates {
         }
 
         if (needUpdate) {
+            File fldr = new File(plugin.getDataFolder(), "backup");
+            if (!fldr.exists()) {
+                if (!fldr.mkdirs()) {
+                    plugin.logger.warn("Failed to create folder for backups!");
+                    fldr = plugin.getDataFolder();
+                }
+            }
             plugin.getComponentLogger().info("Updating config...");
             String ts = new SimpleDateFormat("dd-MM-yyyy-HH-mm-ss").format(new Date());
-            File backup = new File(plugin.getDataFolder(), "config." + ts + ".yml");
+            File backup = new File(plugin.getDataFolder(), fldr.getName() + "/" + ts + ".yml");
 
             try {
                 oldConfig.save(backup);
