@@ -48,6 +48,7 @@ public class Get implements Argument {
 
         String link = null;
         boolean crop = plugin.getConfig().getBoolean("map.cropDefault", false);
+        boolean temp = false;
         boolean allowTemp = plugin.getConfig().getBoolean("map.allowTemporaryMaps", false) || player.hasPermission("mapget.temp");
         int index = 0;
 
@@ -62,6 +63,7 @@ public class Get implements Argument {
                 switch (key) {
                     case "url", "link", "href", "u" -> link = value;
                     case "crop", "trim", "cut", "c" -> crop = value.equalsIgnoreCase("true");
+                    case "temp", "temporary", "t" ->  temp = value.equalsIgnoreCase("true") &&  allowTemp;
                 }
             } else {
                 index++;
@@ -69,6 +71,7 @@ public class Get implements Argument {
                 switch (index) {
                     case 1: link = arg;
                     case 2: crop = arg.equalsIgnoreCase("true");
+                    case 3: temp = arg.equalsIgnoreCase("true") && allowTemp;
                 }
             }
         }
@@ -80,7 +83,8 @@ public class Get implements Argument {
         plugin.logger.info("    Player: {}", player.getName());
         plugin.logger.info("    URL: {}", link);
         plugin.logger.info("    Must be cropped?: {}", crop);
+        plugin.logger.info("    Temporary map?: {}", temp);
 
-        new Maps(plugin, this.conn, plugin.logger, plugin.getDataFolder()).createMap(link, crop, player);
+        new Maps(plugin, this.conn, plugin.logger, plugin.getDataFolder()).createMap(link, crop, temp, player);
     }
 }

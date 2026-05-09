@@ -77,7 +77,7 @@ public class Maps {
         return loaded;
     }
 
-    public void createMap(String url, boolean crop, Player player) {
+    public void createMap(String url, boolean crop, boolean temp, Player player) {
         boolean useDatabase = !plugin.getConfig().getBoolean("map.temp", false);
         try {
             int TIMEOUT = plugin.getConfig().getInt("connection.timeout", 5000);
@@ -131,7 +131,7 @@ public class Maps {
                 try {
                     ImageIO.write(mapImg, "PNG", outImg);
 
-                    if (useDatabase) {
+                    if (useDatabase && !temp) {
                         try (PreparedStatement pstmt = conn.prepareStatement("INSERT OR REPLACE INTO maps (creator, map_id, local_path, url) VALUES (?, ?, ?, ?)")) {
                             pstmt.setString(1, player.getUniqueId().toString());
                             pstmt.setInt(2, mapId);

@@ -17,6 +17,13 @@ map:
   # Default = false
   cropDefault: false
 
+  # Allow to create temporary maps (/map get <url> temp:<true/false> or /map get <url> <crop (true/false)> <temp (true/false)>
+  # Will be ignored if temp is false or if player has mapget.temp permission
+  # true - Allow
+  # false - Disallow
+  # Default = false
+  allowTemporaryMaps: false
+
 connection:
   # URL connection timeout in milliseconds.
   # Default = 5000 ms (5 seconds)
