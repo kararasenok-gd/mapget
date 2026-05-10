@@ -30,23 +30,27 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
-      - name: Get version and commit SHA
+      - name: Get version and metadata
         id: get_version
         run: |
           BASE_VERSION=$(grep "^version=" gradle.properties | cut -d'=' -f2 | xargs)
-          SHORT_SHA=$(git rev-parse --short HEAD)
-          FULL_VERSION="${BASE_VERSION}-${SHORT_SHA}"
           
-          echo "BASE_VERSION=$BASE_VERSION" >> $GITHUB_OUTPUT
+          RUN_NUM=${{ github.run_number }}
+          
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          
+          TAG_NAME="v${BASE_VERSION}-beta.${RUN_NUM}"
+          RELEASE_TITLE="v${BASE_VERSION}-beta.${RUN_NUM} (${SHORT_SHA})"
+          
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "RELEASE_TITLE=$RELEASE_TITLE" >> $GITHUB_OUTPUT
           echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_OUTPUT
-          echo "FULL_VERSION=$FULL_VERSION" >> $GITHUB_OUTPUT
 
       - name: Check if Tag Exists
         id: tag_check
         run: |
-          if git rev-parse "v${{ steps.get_version.outputs.FULL_VERSION }}" >/dev/null 2>&1; then
+          if git rev-parse "${{ steps.get_version.outputs.TAG_NAME }}" >/dev/null 2>&1; then
             echo "TAG_EXISTS=true" >> $GITHUB_ENV
-            echo "Tag v${{ steps.get_version.outputs.FULL_VERSION }} already exists. Skipping release."
           else
             echo "TAG_EXISTS=false" >> $GITHUB_ENV
           fi
@@ -55,15 +59,17 @@ jobs:
         if: env.TAG_EXISTS == 'false'
         id: changelog
         run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          VERSION="${{ steps.get_version.outputs.FULL_VERSION }}"
+          PREV_TAG=$(git describe --tags --abbrev=0 --match="v*-beta.*" 2>/dev/null || echo "")
+          
+          CURRENT_TAG="${{ steps.get_version.outputs.TAG_NAME }}"
           REPO_URL="https://github.com/${{ github.repository }}"
           
-          echo "## Beta Changes for v$VERSION" > changelog_body.md
+          echo "## Changes in $CURRENT_TAG" > changelog_body.md
           echo "" >> changelog_body.md
           
           if [ -z "$PREV_TAG" ]; then
             RANGE="HEAD"
+            echo "First beta release or no previous beta tags found." >> changelog_body.md
           else
             RANGE="$PREV_TAG..HEAD"
           fi
@@ -75,13 +81,13 @@ jobs:
             fi
           done
           
-          if [ $(wc -l < changelog_body.md) -le 2 ]; then
+          if [ $(wc -l < changelog_body.md) -le 3 ]; then
             echo "- Beta build from commit ${{ steps.get_version.outputs.SHORT_SHA }}" >> changelog_body.md
           fi
           
           echo "" >> changelog_body.md
           if [ ! -z "$PREV_TAG" ]; then
-            echo "**Full Compare**: [\`$PREV_TAG...v$VERSION\`]($REPO_URL/compare/$PREV_TAG...v$VERSION)" >> changelog_body.md
+            echo "**Full Compare**: [\`$PREV_TAG...$CURRENT_TAG\`]($REPO_URL/compare/$PREV_TAG...$CURRENT_TAG)" >> changelog_body.md
           fi
           
           {
@@ -100,8 +106,8 @@ jobs:
         if: env.TAG_EXISTS == 'false'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.get_version.outputs.FULL_VERSION }}
-          name: v${{ steps.get_version.outputs.FULL_VERSION }} (Beta)
+          tag_name: ${{ steps.get_version.outputs.TAG_NAME }}
+          name: ${{ steps.get_version.outputs.RELEASE_TITLE }}
           body: ${{ steps.changelog.outputs.body }}
           draft: false
           prerelease: true
