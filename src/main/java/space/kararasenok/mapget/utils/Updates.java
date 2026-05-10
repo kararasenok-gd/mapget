@@ -1,11 +1,13 @@
 package space.kararasenok.mapget.utils;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import space.kararasenok.mapget.Mapget;
+import space.kararasenok.mapget.technical.UpdateResponse;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,6 +20,8 @@ import java.net.http.HttpResponse;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Updates {
     // I stole this code from here: https://github.com/kararasenok-gd/NewDayNotifier/blob/master/src/main/java/space/kararasenok/newDayNotifier/Updates.java
@@ -25,24 +29,43 @@ public class Updates {
 
     private static final String repository = "kararasenok-gd/mapget";
 
-    private static boolean isOutdated(String current, String latest) {
-        String[] c = current.split("\\.");
-        String[] l = latest.split("\\.");
+    private static boolean isOutdated(String current, String latest, boolean useBeta) {
+        Pattern p = Pattern.compile("^v?(\\d+(?:\\.\\d+)*)(?:-beta\\.?(\\d+))?$");
 
-        int length = Math.max(c.length, l.length);
+        Matcher mCurrent = p.matcher(current);
+        Matcher mLatest = p.matcher(latest);
 
-        for  (int i = 0; i < length; i++) {
-            int cv = i < c.length ? Integer.parseInt(c[i]) : 0;
-            int lv =  i < l.length ? Integer.parseInt(l[i]) : 0;
+        if (!mCurrent.find() || !mLatest.find()) return false;
 
-            if (cv < lv) return true;
-            if (cv > lv) return false;
+        String baseCurrent = mCurrent.group(1);
+        String baseLatest = mLatest.group(1);
+
+        String betaCurrentStr = mCurrent.group(2);
+        String betaLatestStr = mLatest.group(2);
+
+        if (!useBeta && betaLatestStr != null) {
+            return false;
         }
 
-        return false;
-    };
+        String[] cParts = baseCurrent.split("\\.");
+        String[] lParts = baseLatest.split("\\.");
+        int length = Math.max(cParts.length, lParts.length);
 
-    public static CompletableFuture<Boolean> checkUpdates(Mapget plugin) {
+        for (int i = 0; i < length; i++) {
+            int cv = i < cParts.length ? Integer.parseInt(cParts[i]) : 0;
+            int lv = i < lParts.length ? Integer.parseInt(lParts[i]) : 0;
+
+            if (lv > cv) return true;
+            if (lv < cv) return false;
+        }
+        
+        int cb = (betaCurrentStr == null) ? Integer.MAX_VALUE : Integer.parseInt(betaCurrentStr);
+        int lb = (betaLatestStr == null) ? Integer.MAX_VALUE : Integer.parseInt(betaLatestStr);
+
+        return lb > cb;
+    }
+
+    public static CompletableFuture<UpdateResponse> checkUpdates(Mapget plugin, boolean useBeta) {
         String version = plugin.getDescription().getVersion();
 
         return CompletableFuture.supplyAsync(() -> {
@@ -55,17 +78,25 @@ public class Updates {
 
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
                 if (response.statusCode() == 200) {
-                    JsonObject json = (JsonObject) new JsonParser().parse(response.body()).getAsJsonObject();
-                    String latestVersion = json.get("tag_name").getAsString().replace("v", "");
+                    String latestVersion = "";
 
-                    return isOutdated(version, latestVersion);
+                    if (!useBeta) {
+                        JsonObject json = JsonParser.parseString(response.body()).getAsJsonObject();
+                        latestVersion = json.get("tag_name").getAsString().replace("v", "");
+                    } else {
+                        JsonArray jsonArr = JsonParser.parseString(response.body()).getAsJsonArray();
+                        JsonObject json = jsonArr.get(0).getAsJsonObject();
+                        latestVersion = json.get("tag_name").getAsString().replace("v", "");
+                    }
+
+                    return new UpdateResponse(isOutdated(version, latestVersion, useBeta), latestVersion);
                 }
             } catch (Exception e) {
                 plugin.getComponentLogger().error("Failed to check updates.");
                 plugin.getComponentLogger().error(e.getMessage());
             }
 
-            return false;
+            return new UpdateResponse(false, "");
         });
     };
 
