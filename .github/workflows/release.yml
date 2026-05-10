@@ -50,7 +50,7 @@ jobs:
         if: env.TAG_EXISTS == 'false'
         id: changelog
         run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          PREV_TAG=$(git describe --tags --abbrev=0 --exclude='*[-]*' 2>/dev/null || echo "")
           VERSION="${{ steps.get_version.outputs.VERSION }}"
           REPO_URL="https://github.com/${{ github.repository }}"
           
