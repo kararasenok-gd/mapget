@@ -21,6 +21,7 @@ public class Help implements Argument {
     @Override
     public void handler(CommandSender sender, String[] args) {
         sender.sendMessage(MiniMessage.deserialize("""
-        Theres nothing for now"""));
+        Theres nothing for now
+        Maybe later i move it to wiki or idk"""));
     }
 }
