@@ -74,4 +74,5 @@ public class MapHandler implements BasicCommand {
     public String getCommandName() {
         return commandName;
     }
+    public Map<String, Argument> getArgumentMap() { return argumentMap; }
 }
