@@ -80,7 +80,7 @@ public final class Mapget extends JavaPlugin {
         if (getConfig().getBoolean("updates.check", true)) {
             logger.info("Checking for updates...");
             Updates.checkUpdates(this, getConfig().getBoolean("updates.beta", false)).thenAccept(out -> {
-                if (out.status()) {
+                if (out.hasUpdates()) {
                     logger.info("New update is available!");
                     logger.info("Download it here: https://github.com/kararasenok-gd/mapget/releases/tag/v{}", out.tag());
                 } else {
