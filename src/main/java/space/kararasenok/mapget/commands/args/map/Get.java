@@ -15,6 +15,7 @@ import java.sql.SQLException;
 public class Get implements Argument {
     public static final String NAME = "get";
     public static final String DESC = "Convert image into map";
+    public static final String LONGDESC = "Convert image into map";
     public static final String PERMS = "mapget.get";
 
     private final Mapget plugin;
@@ -31,7 +32,7 @@ public class Get implements Argument {
     }
 
     @Override
-    public String description() { return DESC; }
+    public String description(boolean showLong) { return showLong ?  LONGDESC : DESC; }
 
     @Override
     public void handler(CommandSender sender, String[] args) {
