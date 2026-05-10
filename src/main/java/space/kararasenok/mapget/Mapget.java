@@ -77,15 +77,17 @@ public final class Mapget extends JavaPlugin {
         logger.info("Validating config.yml...");
         Updates.validateAndFixConfig(this);
 
-        logger.info("Checking for updates...");
-        Updates.checkUpdates(this).thenAccept(out -> {
-            if (out) {
-                logger.info("New update is available!");
-                logger.info("Download it here: https://github.com/kararasenok-gd/mapget/releases/latest");
-            } else {
-                logger.info("Everything is fine. MapGet is running on latest version. Yippee :3");
-            };
-        });
+        if (getConfig().getBoolean("updates.check", true)) {
+            logger.info("Checking for updates...");
+            Updates.checkUpdates(this, getConfig().getBoolean("updates.beta", false)).thenAccept(out -> {
+                if (out.hasUpdates()) {
+                    logger.info("New update is available!");
+                    logger.info("Download it here: https://github.com/kararasenok-gd/mapget/releases/tag/v{}", out.tag());
+                } else {
+                    logger.info("Everything is fine. MapGet is running on latest version. Yippee :3");
+                };
+            });
+        }
 
         int serverVersion = Bukkit.getUnsafe().getDataVersion();
         if (!supportedDataVersions.contains(serverVersion)) {

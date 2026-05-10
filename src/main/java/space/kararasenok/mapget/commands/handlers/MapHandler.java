@@ -8,6 +8,7 @@ import space.kararasenok.mapget.commands.Argument;
 import space.kararasenok.mapget.commands.args.map.Get;
 import space.kararasenok.mapget.commands.args.map.Help;
 import space.kararasenok.mapget.commands.args.map.Reload;
+import space.kararasenok.mapget.commands.args.map.Update;
 
 import java.sql.Connection;
 import java.util.*;
@@ -29,7 +30,8 @@ public class MapHandler implements BasicCommand {
         List.of(
                 new Help(plugin, this),
                 new Reload(plugin),
-                new Get(plugin, conn)
+                new Get(plugin, conn),
+                new Update(plugin)
         ).forEach(arg -> argumentMap.put(arg.name().toLowerCase(), arg));
 
         this.cachedSuggestions = argumentMap.values().stream()
