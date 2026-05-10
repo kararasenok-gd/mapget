@@ -15,7 +15,7 @@ import java.sql.SQLException;
 public class Get implements Argument {
     public static final String NAME = "get";
     public static final String DESC = "Convert image into map";
-    public static final String LONGDESC = "Convert image into map";
+    public static final String LONGDESC = "Download and convert image into map\n\n<gold><b>Permissions:</b></gold>\nmapget.get - Limit map creation. By default available for everyone\nmapget.temp - Bypass restriction for creating temp maps. By default available for ops\n\n<gold><b>Usage:</b></gold>\n<aqua>/map get <url> <crop> <temp></aqua> - Get the map. Crop and temp arguments are boolean (true/false)\n\n<blue><b>Note:</b></blue> You can define arguments like this: <aqua>/map get <arg>:<value></aqua>\n<blue>Examples:</blue>\n<aqua>/map get https://...</aqua> - Get the map with image https://...\n<aqua>/map get https://... temp:true</aqua> - Get temporary map with image https://...\n<aqua>/map get c:true t:true u:https://...</aqua> - Get temporary and cropped map with image https://...\n<blue>Yep, there's alt names for args</blue>\nurl = link = href = u\ncrop = trim = cut = c\ntemp = temporary = t";
     public static final String PERMS = "mapget.get";
 
     private final Mapget plugin;
