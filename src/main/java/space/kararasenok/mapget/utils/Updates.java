@@ -72,7 +72,7 @@ public class Updates {
             try {
                 HttpClient client = HttpClient.newHttpClient();
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("https://api.github.com/repos/" + repository + "/releases/latest"))
+                        .uri(URI.create("https://api.github.com/repos/" + repository + "/releases" + (useBeta ? "?per_page=1" : "/latest")))
                         .header("Accept", "application/vnd.github.v3+json")
                         .build();
 
