@@ -31,10 +31,9 @@ public class Help implements Argument {
     @Override
     public void handler(CommandSender sender, String[] args) {
         Map<String, Argument> argmap = mapHandler.getArgumentMap();
+        StringBuilder sb = new StringBuilder();
 
         if (args.length == 1) {
-            StringBuilder sb = new StringBuilder();
-
             sb.append("===== <b><aqua><hover:show_text:'haii :3'>MapGet help</hover></aqua></b> =====\n");
             sb.append("<gray><i>Click on command to view detailed info</i></gray>\n\n");
 
@@ -44,19 +43,16 @@ public class Help implements Argument {
 
                 sb.append(String.format("<click:run_command:'/map help %s'><gold>/map %s</gold></click> - %s\n", name, name, arg.description(false)));
             }
-
-            sender.sendMessage(MiniMessage.deserialize(sb.toString()));
         } else {
             String name = args[1];
             Argument cmdArg = argmap.get(name);
 
-            StringBuilder sb = new StringBuilder();
             sb.append(String.format("===== <b><aqua><hover:show_text:'haii :3'>MapGet help - /map %s</hover></aqua></b> =====\n", name));
             sb.append(cmdArg.description(true));
 
             if (!sb.toString().endsWith("\n")) { sb.append("\n"); }
-
-            sender.sendMessage(MiniMessage.deserialize(sb.toString()));
         }
+
+        sender.sendMessage(MiniMessage.deserialize(sb.toString()));
     }
 }
