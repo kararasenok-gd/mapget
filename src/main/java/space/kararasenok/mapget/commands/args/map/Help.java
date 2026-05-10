@@ -7,6 +7,7 @@ import space.kararasenok.mapget.utils.MiniMessage;
 
 public class Help implements Argument {
     public static final String NAME = "help";
+    public static final String DESC = "Show detailed information about the commands";
 
     private final Mapget plugin;
     public Help(Mapget plugin) {
@@ -17,6 +18,9 @@ public class Help implements Argument {
     public String name() {
         return NAME;
     }
+
+    @Override
+    public String description() { return DESC; }
 
     @Override
     public void handler(CommandSender sender, String[] args) {

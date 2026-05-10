@@ -7,6 +7,7 @@ import space.kararasenok.mapget.commands.Argument;
 
 public class Reload implements Argument {
     public static final String NAME = "reload";
+    public static final String DESC = "Reloads the plugin";
     public static final String PERMS = "mapget.reload";
 
     private final Mapget plugin;
@@ -18,6 +19,9 @@ public class Reload implements Argument {
     public String name() {
         return NAME;
     }
+
+    @Override
+    public String description() { return DESC; }
 
     @Override
     public void handler(CommandSender sender, String[] args) {
