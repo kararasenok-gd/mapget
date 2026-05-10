@@ -46,7 +46,7 @@ public class Get implements Argument {
         }
 
         if (args.length < 2) {
-            sender.sendMessage(MiniMessage.deserialize("<red>Incorrect number of arguments! Check <aqua><click:suggest_command:'/map help'>help</click></aqua> for right usage."));
+            sender.sendMessage(MiniMessage.deserialize("<red>Incorrect number of arguments! Check <aqua><click:run_command:'/map help get'>help</click></aqua> for right usage."));
             return;
         }
 
