@@ -59,3 +59,8 @@ timestamp:
   # List of offsets can be found here: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
   # Default = +00:00
   utcOffset: "+00:00"
+
+updates:
+  # Should plugin check updates?
+  # Default = true
+  check: true
