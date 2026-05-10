@@ -13,9 +13,13 @@ permissions:
   mapget.temp:
     description: Allows to create temporary maps even if allowTemporaryMaps setting is false
     default: op
+  mapget.update:
+    description: Allows to use /map update command
+    default: op
   mapget.*:
     description: :P
     children:
       mapget.reload: true
       mapget.get: true
       mapget.temp: true
+      mapget.update: true
