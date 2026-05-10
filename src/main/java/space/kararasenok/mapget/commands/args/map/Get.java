@@ -59,7 +59,7 @@ public class Get implements Argument {
         for (int i = 1; i < args.length; i++) {
             String arg = args[i];
 
-            if (arg.contains(":")) {
+            if (arg.contains(":") && !arg.startsWith("https://") && !arg.startsWith("http://")) {
                 String[] split = arg.split(":");
                 String key = split[0];
                 String value = split[1];
@@ -78,6 +78,11 @@ public class Get implements Argument {
                     case 3: temp = arg.equalsIgnoreCase("true") && allowTemp;
                 }
             }
+        }
+
+        if (link == null) {
+            player.sendMessage(MiniMessage.deserialize("<red>Failed to create map because link is empty!"));
+            return;
         }
 
         player.sendMessage(MiniMessage.deserialize("<gray>Creating map. Please wait..."));
