@@ -21,7 +21,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.sql.*;
-import java.time.OffsetTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -159,7 +159,7 @@ public class Maps {
                     String mapLore = plugin.getConfig().getString("map.lore", "§7Created by §b%player% §7at §b%timestamp%");
                     String utcOffset = plugin.getConfig().getString("timestamp.utcOffset", "+00:00");
                     String timestampFormat =  plugin.getConfig().getString("timestamp.format", "yyyy-MM-dd HH:mm:ssXXX");
-                    String timestamp = OffsetTime.now(ZoneOffset.of(utcOffset)).format(DateTimeFormatter.ofPattern(timestampFormat));
+                    String timestamp = OffsetDateTime.now(ZoneOffset.of(utcOffset)).format(DateTimeFormatter.ofPattern(timestampFormat));
 
                     Map<String, String> mapLoreMap = Map.of(
                             "%id%", String.valueOf(mapId),
