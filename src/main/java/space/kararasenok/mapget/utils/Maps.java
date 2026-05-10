@@ -2,7 +2,6 @@ package space.kararasenok.mapget.utils;
 
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.Bukkit;
-import org.bukkit.Input;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -22,6 +21,11 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.sql.*;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
 
 public class Maps {
     private final JavaPlugin plugin;
@@ -77,7 +81,7 @@ public class Maps {
         return loaded;
     }
 
-    public void createMap(String url, boolean crop, Player player) {
+    public void createMap(String url, boolean crop, boolean temp, Player player) {
         boolean useDatabase = !plugin.getConfig().getBoolean("map.temp", false);
         try {
             int TIMEOUT = plugin.getConfig().getInt("connection.timeout", 5000);
@@ -131,7 +135,7 @@ public class Maps {
                 try {
                     ImageIO.write(mapImg, "PNG", outImg);
 
-                    if (useDatabase) {
+                    if (useDatabase && !temp) {
                         try (PreparedStatement pstmt = conn.prepareStatement("INSERT OR REPLACE INTO maps (creator, map_id, local_path, url) VALUES (?, ?, ?, ?)")) {
                             pstmt.setString(1, player.getUniqueId().toString());
                             pstmt.setInt(2, mapId);
@@ -152,7 +156,24 @@ public class Maps {
                     mapMeta.setMapView(view);
 
                     String mapName = plugin.getConfig().getString("map.name", "§6Image #%id%");
+                    String mapLore = plugin.getConfig().getString("map.lore", "§7Created by §b%player% §7at §b%timestamp%");
+                    String utcOffset = plugin.getConfig().getString("timestamp.utcOffset", "+00:00");
+                    String timestampFormat =  plugin.getConfig().getString("timestamp.format", "yyyy-MM-dd HH:mm:ssXXX");
+                    String timestamp = OffsetDateTime.now(ZoneOffset.of(utcOffset)).format(DateTimeFormatter.ofPattern(timestampFormat));
+
+                    Map<String, String> mapLoreMap = Map.of(
+                            "%id%", String.valueOf(mapId),
+                            "%player%", player.getName(),
+                            "%url%", url,
+                            "%timestamp%", timestamp
+                            );
+
+                    for (Map.Entry<String, String> entry : mapLoreMap.entrySet()) {
+                        mapLore =  mapLore.replace(entry.getKey(), entry.getValue());
+                    }
+
                     mapMeta.setDisplayName(mapName.replace("%id%", String.valueOf(mapId)));
+                    mapMeta.setLore(List.of(mapLore.split("\n")));
                     mapItem.setItemMeta(mapMeta);
 
                     player.getInventory().addItem(mapItem);

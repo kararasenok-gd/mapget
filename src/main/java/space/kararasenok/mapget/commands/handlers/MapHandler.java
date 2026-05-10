@@ -27,7 +27,7 @@ public class MapHandler implements BasicCommand {
         this.conn = conn;
 
         List.of(
-                new Help(plugin),
+                new Help(plugin, this),
                 new Reload(plugin),
                 new Get(plugin, conn)
         ).forEach(arg -> argumentMap.put(arg.name().toLowerCase(), arg));
@@ -74,4 +74,5 @@ public class MapHandler implements BasicCommand {
     public String getCommandName() {
         return commandName;
     }
+    public Map<String, Argument> getArgumentMap() { return argumentMap; }
 }

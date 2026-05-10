@@ -5,7 +5,7 @@ import com.google.gson.JsonParser;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.java.JavaPlugin;
+import space.kararasenok.mapget.Mapget;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,7 +42,7 @@ public class Updates {
         return false;
     };
 
-    public static CompletableFuture<Boolean> checkUpdates(JavaPlugin plugin) {
+    public static CompletableFuture<Boolean> checkUpdates(Mapget plugin) {
         String version = plugin.getDescription().getVersion();
 
         return CompletableFuture.supplyAsync(() -> {
@@ -69,7 +69,7 @@ public class Updates {
         });
     };
 
-    public static void validateAndFixConfig(JavaPlugin plugin) {
+    public static void validateAndFixConfig(Mapget plugin) {
         File oldConfigFile = new File(plugin.getDataFolder(), "config.yml");
         if (!oldConfigFile.exists()) {
             plugin.saveResource("config.yml", false);
@@ -92,9 +92,16 @@ public class Updates {
         }
 
         if (needUpdate) {
+            File fldr = new File(plugin.getDataFolder(), "backup");
+            if (!fldr.exists()) {
+                if (!fldr.mkdirs()) {
+                    plugin.logger.warn("Failed to create folder for backups!");
+                    fldr = plugin.getDataFolder();
+                }
+            }
             plugin.getComponentLogger().info("Updating config...");
             String ts = new SimpleDateFormat("dd-MM-yyyy-HH-mm-ss").format(new Date());
-            File backup = new File(plugin.getDataFolder(), "config." + ts + ".yml");
+            File backup = new File(plugin.getDataFolder(), fldr.getName() + "/" + ts + ".yml");
 
             try {
                 oldConfig.save(backup);
