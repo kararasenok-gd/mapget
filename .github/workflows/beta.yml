@@ -33,7 +33,7 @@ jobs:
       - name: Get version and metadata
         id: get_version
         run: |
-          BASE_VERSION=$(grep "^version=" gradle.properties | cut -d'=' -f2 | xargs)
+          BASE_VERSION=$(grep "^version=" gradle.properties | cut -d'=' -f2 | sed 's/-beta.*//' | xargs)
           
           RUN_NUM=${{ github.run_number }}
           
@@ -55,47 +55,6 @@ jobs:
             echo "TAG_EXISTS=false" >> $GITHUB_ENV
           fi
 
-      - name: Generate Changelog
-        if: env.TAG_EXISTS == 'false'
-        id: changelog
-        run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 --match="v*-beta.*" 2>/dev/null || echo "")
-          
-          CURRENT_TAG="${{ steps.get_version.outputs.TAG_NAME }}"
-          REPO_URL="https://github.com/${{ github.repository }}"
-          
-          echo "## Changes in $CURRENT_TAG" > changelog_body.md
-          echo "" >> changelog_body.md
-          
-          if [ -z "$PREV_TAG" ]; then
-            RANGE="HEAD"
-            echo "First beta release or no previous beta tags found." >> changelog_body.md
-          else
-            RANGE="$PREV_TAG..HEAD"
-          fi
-
-          git log $RANGE --pretty=format:"%h|%H|%s" | while IFS='|' read -r short_hash long_hash subject; do
-            if echo "$subject" | grep -qE '^(feat|fix|refactor|perf|style|test|build|ci)(\(.*\))?:'; then
-              formatted_subject=$(echo "$subject" | sed -E 's/^([a-z]+(\(.*\))?:)/**\1**/')
-              echo "- [\`$short_hash\`]($REPO_URL/commit/$long_hash) $formatted_subject" >> changelog_body.md
-            fi
-          done
-          
-          if [ $(wc -l < changelog_body.md) -le 3 ]; then
-            echo "- Beta build from commit ${{ steps.get_version.outputs.SHORT_SHA }}" >> changelog_body.md
-          fi
-          
-          echo "" >> changelog_body.md
-          if [ ! -z "$PREV_TAG" ]; then
-            echo "**Full Compare**: [\`$PREV_TAG...$CURRENT_TAG\`]($REPO_URL/compare/$PREV_TAG...$CURRENT_TAG)" >> changelog_body.md
-          fi
-          
-          {
-            echo 'body<<EOF'
-            cat changelog_body.md
-            echo EOF
-          } >> "$GITHUB_OUTPUT"
-
       - name: Build with Gradle
         if: env.TAG_EXISTS == 'false'
         run: |
@@ -108,7 +67,6 @@ jobs:
         with:
           tag_name: ${{ steps.get_version.outputs.TAG_NAME }}
           name: ${{ steps.get_version.outputs.RELEASE_TITLE }}
-          body: ${{ steps.changelog.outputs.body }}
           draft: false
           prerelease: true
           files: |
