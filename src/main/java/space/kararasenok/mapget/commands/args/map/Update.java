@@ -1,6 +1,7 @@
 package space.kararasenok.mapget.commands.args.map;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import space.kararasenok.mapget.Mapget;
 import space.kararasenok.mapget.commands.Argument;
 import space.kararasenok.mapget.utils.MiniMessage;
@@ -34,12 +35,20 @@ public class Update implements Argument {
             return;
         }
 
+        boolean isConsole = !(sender instanceof Player);
+
         sender.sendMessage(MiniMessage.deserialize("<yellow>Checking for updates...</yellow>"));
 
         Updates.checkUpdates(plugin, plugin.getConfig().getBoolean("updates.beta", false)).thenAccept(out -> {
            if (out.hasUpdates()) {
-               sender.sendMessage(MiniMessage.deserialize(String.format("<green>Updates available!</green>\nYou can download it here: <aqua><click:open_url:'%s'>[click!]</click></aqua>", String.format("https://github.com/kararasenok-gd/mapget/releases/tag/v%s",  out.tag()))));
-               plugin.logger.info("From console: {}", String.format("https://github.com/kararasenok-gd/mapget/releases/tag/v%s",  out.tag()));
+               String updateUrl = "https://github.com/kararasenok-gd/mapget/releases/tag/v" + out.tag();
+               sender.sendMessage(MiniMessage.deserialize(
+                       String.format(
+                               "<green>Updates available!</green>\n" +
+                               "You can download it here: <aqua>" + (!isConsole ? "<click:open_url:'%s'>[click!]</click>" : "%s") + "</aqua>",
+                               updateUrl
+                       )
+               ));
            } else {
                sender.sendMessage(MiniMessage.deserialize("<blue>You already use latest version!</blue>"));
            }
