@@ -18,8 +18,14 @@ The compiled `.jar` file will be located in `build/libs/`.
 
 ## Installing on server
 
+### GitHub
 1. Go to [Releases](https://github.com/kararasenok-gd/mapget/releases) tab
-2. Download `.jar` from any release
+2. Download `.jar` file from any release
+### Modrinth
+1. Go on [Modrinth](https://modrinth.com/plugin/mapget/)
+2. Click on Download button
+3. Select Version
+4. Download `.jar` file
 
 ## Supported Minecraft versions
 `✅ - Supported`
@@ -32,7 +38,7 @@ The compiled `.jar` file will be located in `build/libs/`.
 | 1.21 - 1.21.9  | ⚠️      |
 | 1.21.10        | ✅      |
 | 1.21.11        | ✅      |
-| 26.1+          | ⚠️      |
+| 26.1           | ⚠️      |
 | 26.1.2         | ✅      |
 
 ## Configuration
