@@ -36,7 +36,7 @@ public class Get implements Argument {
 
     @Override
     public void handler(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player player)) {
+        if (!(sender instanceof Player)) {
             sender.sendMessage(MiniMessage.deserialize("<red>Only players can execute this command!"));
             return;
         }
@@ -54,7 +54,7 @@ public class Get implements Argument {
         String link = null;
         boolean crop = plugin.getConfig().getBoolean("map.cropDefault", false);
         boolean temp = false;
-        boolean allowTemp = plugin.getConfig().getBoolean("map.allowTemporaryMaps", false) || player.hasPermission("mapget.temp");
+        boolean allowTemp = plugin.getConfig().getBoolean("map.allowTemporaryMaps", false) || sender.hasPermission("mapget.temp");
         int index = 0;
 
         for (int i = 1; i < args.length; i++) {
@@ -82,19 +82,19 @@ public class Get implements Argument {
         }
 
         if (link == null) {
-            player.sendMessage(MiniMessage.deserialize("<red>Failed to create map because link is empty!"));
+            sender.sendMessage(MiniMessage.deserialize("<red>Failed to create map because link is empty!"));
             return;
         }
 
-        player.sendMessage(MiniMessage.deserialize("<gray>Creating map. Please wait..."));
+        sender.sendMessage(MiniMessage.deserialize("<gray>Creating map. Please wait..."));
 
         plugin.logger.info("Creating map...");
         plugin.logger.info("Data:");
-        plugin.logger.info("    Player: {}", player.getName());
+        plugin.logger.info("    Player: {}", sender.getName());
         plugin.logger.info("    URL: {}", link);
         plugin.logger.info("    Must be cropped?: {}", crop);
         plugin.logger.info("    Temporary map?: {}", temp);
 
-        new Maps(plugin, this.conn, plugin.logger, plugin.getDataFolder()).createMap(link, crop, temp, player);
+        new Maps(plugin, this.conn, plugin.logger, plugin.getDataFolder()).createMap(link, crop, temp, (Player) sender);
     }
 }
