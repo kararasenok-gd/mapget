@@ -32,14 +32,15 @@ The compiled `.jar` file will be located in `build/libs/`.
 `⚠️ - Not tested`
 `❌ - Not supported`
 
-|     Version    | Support |
-|----------------|---------|
-| <1.21          | ⚠️      |
-| 1.21 - 1.21.9  | ⚠️      |
-| 1.21.10        | ✅      |
-| 1.21.11        | ✅      |
-| 26.1           | ⚠️      |
-| 26.1.2         | ✅      |
+> [!WARNING]
+> 1.21.X will become unsupported after update 1.3.0
+
+| Version 	| Support 	|
+|---------	|---------	|
+| 1.21.X  	| ✅       	|
+| 26.1    	| ⚠️       	|
+| 26.1.2  	| ✅       	|
+| 26.2    	| ✅        	|
 
 ## Configuration
 
