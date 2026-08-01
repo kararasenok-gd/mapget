@@ -3,8 +3,8 @@
 Simple plugin for Paper that converts images into maps
 
 ## Requirements
-- Minecraft Paper 1.21.10
-- Java 21
+- Minecraft Paper 26.2
+- Java 25
 - Gradle (for building)
 
 ## Building
