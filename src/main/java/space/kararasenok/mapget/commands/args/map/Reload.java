@@ -8,7 +8,7 @@ import space.kararasenok.mapget.commands.Argument;
 public class Reload implements Argument {
     public static final String NAME = "reload";
     public static final String DESC = "Reloads the plugin";
-    public static final String LONGDESC = "Download and convert image into map\n\n<gold><b>Permissions:</b></gold>\nmapget.reload - Restrict updating cached configuration. By default available only for ops";
+    public static final String LONGDESC = "Reloads plugin configuration\n\n<gold><b>Permissions:</b></gold>\nmapget.reload - Restrict updating cached configuration. By default available only for ops";
     public static final String PERMS = "mapget.reload";
 
     private final Mapget plugin;
