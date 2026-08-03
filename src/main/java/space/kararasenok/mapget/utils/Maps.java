@@ -147,34 +147,12 @@ public class Maps {
 
                     applyRenderer(view, mapImg);
 
-                    ItemStack mapItem = new ItemStack(Material.FILLED_MAP);
-                    MapMeta mapMeta = (MapMeta) mapItem.getItemMeta();
-                    if (mapMeta == null) {
-                        player.sendMessage(MiniMessage.deserialize("<red>Failed to create map: Metadata is empty"));
+                    ItemStack mapItem = getMapItem(view, player, mapId, url);
+
+                    if (mapItem == null) {
+                        player.sendMessage(MiniMessage.deserialize("<red>Failed to create map (maybe MapMeta is null)!"));
                         return;
-                    };
-                    mapMeta.setMapView(view);
-
-                    String mapName = plugin.getConfig().getString("map.name", "§6Image #%id%");
-                    String mapLore = plugin.getConfig().getString("map.lore", "§7Created by §b%player% §7at §b%timestamp%");
-                    String utcOffset = plugin.getConfig().getString("timestamp.utcOffset", "+00:00");
-                    String timestampFormat =  plugin.getConfig().getString("timestamp.format", "yyyy-MM-dd HH:mm:ssXXX");
-                    String timestamp = OffsetDateTime.now(ZoneOffset.of(utcOffset)).format(DateTimeFormatter.ofPattern(timestampFormat));
-
-                    Map<String, String> mapLoreMap = Map.of(
-                            "%id%", String.valueOf(mapId),
-                            "%player%", player.getName(),
-                            "%url%", url,
-                            "%timestamp%", timestamp
-                            );
-
-                    for (Map.Entry<String, String> entry : mapLoreMap.entrySet()) {
-                        mapLore =  mapLore.replace(entry.getKey(), entry.getValue());
                     }
-
-                    mapMeta.setDisplayName(mapName.replace("%id%", String.valueOf(mapId)));
-                    mapMeta.setLore(List.of(mapLore.split("\n")));
-                    mapItem.setItemMeta(mapMeta);
 
                     player.getInventory().addItem(mapItem);
                     player.sendMessage(MiniMessage.deserialize("<green>Map successfully created!"));
@@ -194,6 +172,37 @@ public class Maps {
         }
     }
 
+    public ItemStack getMapItem(MapView view, Player player, int mapId, String url) {
+        ItemStack mapItem = new ItemStack(Material.FILLED_MAP);
+        MapMeta mapMeta = (MapMeta) mapItem.getItemMeta();
+        if (mapMeta == null) {
+            return null;
+        };
+        mapMeta.setMapView(view);
+
+        String mapName = plugin.getConfig().getString("map.name", "§6Image #%id%");
+        String mapLore = plugin.getConfig().getString("map.lore", "§7Created by §b%player% §7at §b%timestamp%");
+        String utcOffset = plugin.getConfig().getString("timestamp.utcOffset", "+00:00");
+        String timestampFormat =  plugin.getConfig().getString("timestamp.format", "yyyy-MM-dd HH:mm:ssXXX");
+        String timestamp = OffsetDateTime.now(ZoneOffset.of(utcOffset)).format(DateTimeFormatter.ofPattern(timestampFormat));
+
+        Map<String, String> mapLoreMap = Map.of(
+                "%id%", String.valueOf(mapId),
+                "%player%", player.getName(),
+                "%url%", url,
+                "%timestamp%", timestamp
+        );
+
+        for (Map.Entry<String, String> entry : mapLoreMap.entrySet()) {
+            mapLore =  mapLore.replace(entry.getKey(), entry.getValue());
+        }
+
+        mapMeta.setDisplayName(mapName.replace("%id%", String.valueOf(mapId)));
+        mapMeta.setLore(List.of(mapLore.split("\n")));
+        mapItem.setItemMeta(mapMeta);
+
+        return mapItem;
+    }
     private static void applyRenderer(MapView view, BufferedImage img) {
         view.setTrackingPosition(false);
         if (view.getClass().getDeclaredMethods().toString().contains("setLocked")) {
