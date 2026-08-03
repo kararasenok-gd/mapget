@@ -7,10 +7,7 @@ import space.kararasenok.mapget.technical.Argument;
 import space.kararasenok.mapget.utils.Maps;
 import space.kararasenok.mapget.utils.MiniMessage;
 
-import java.io.File;
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 
 public class Get implements Argument {
     public static final String NAME = "get";
