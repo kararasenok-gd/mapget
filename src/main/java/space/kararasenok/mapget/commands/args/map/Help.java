@@ -2,7 +2,7 @@ package space.kararasenok.mapget.commands.args.map;
 
 import org.bukkit.command.CommandSender;
 import space.kararasenok.mapget.Mapget;
-import space.kararasenok.mapget.commands.Argument;
+import space.kararasenok.mapget.technical.Argument;
 import space.kararasenok.mapget.commands.handlers.MapHandler;
 import space.kararasenok.mapget.utils.MiniMessage;
 

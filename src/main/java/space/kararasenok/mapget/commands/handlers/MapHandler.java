@@ -4,7 +4,7 @@ import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bukkit.command.CommandSender;
 import space.kararasenok.mapget.Mapget;
-import space.kararasenok.mapget.commands.Argument;
+import space.kararasenok.mapget.technical.Argument;
 import space.kararasenok.mapget.commands.args.map.Get;
 import space.kararasenok.mapget.commands.args.map.Help;
 import space.kararasenok.mapget.commands.args.map.Reload;

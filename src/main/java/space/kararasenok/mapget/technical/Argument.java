@@ -1,4 +1,4 @@
-package space.kararasenok.mapget.commands;
+package space.kararasenok.mapget.technical;
 
 import org.bukkit.command.CommandSender;
 
