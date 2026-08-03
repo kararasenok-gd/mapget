@@ -8,6 +8,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.MapView;
 import org.bukkit.plugin.java.JavaPlugin;
+import space.kararasenok.mapget.technical.MapEntry;
 import space.kararasenok.mapget.technical.StaticImageRenderer;
 
 import javax.imageio.ImageIO;
@@ -24,6 +25,7 @@ import java.sql.*;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -172,6 +174,20 @@ public class Maps {
         }
     }
 
+    public void deleteMap(int mapId) {
+        MapView mapView = Bukkit.getMap(mapId);
+        if (mapView != null) {
+            mapView.getRenderers().forEach(mapView::removeRenderer);
+        }
+
+        try (PreparedStatement pstmt = conn.prepareStatement("DELETE FROM maps WHERE map_id = ?")) {
+            pstmt.setInt(1, mapId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            logger.error("Failed to delete map: SQLException: {}", e.getMessage());
+        }
+    }
+
     public ItemStack getMapItem(MapView view, Player player, int mapId, String url) {
         ItemStack mapItem = new ItemStack(Material.FILLED_MAP);
         MapMeta mapMeta = (MapMeta) mapItem.getItemMeta();
@@ -203,6 +219,56 @@ public class Maps {
 
         return mapItem;
     }
+
+    public MapEntry getMapData(int mapId) {
+        try (PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM maps WHERE map_id = ?")) {
+            pstmt.setInt(1, mapId);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (!rs.next()) { return null; }
+                return new MapEntry(rs.getString("creator"), rs.getInt("map_id"), rs.getString("url"), rs.getString("local_path"));
+            }
+        } catch (SQLException e) {
+            logger.error("Database error in getMapData: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    public List<MapEntry> getMapsList(Player player) {
+        String uuid = player.getUniqueId().toString();
+        List<MapEntry> result = new ArrayList<>();
+
+        try (PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM maps WHERE creator = ?")) {
+            pstmt.setString(1, uuid);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    result.add(new MapEntry(rs.getString("creator"), rs.getInt("map_id"), rs.getString("url"), rs.getString("local_path")));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Database error in getMapsList: {}", e.getMessage());
+        }
+
+        return result;
+    }
+
+    public boolean checkIfPlayerOwnsMap(Player player, int mapId) {
+        String uuid = player.getUniqueId().toString();
+
+        try (PreparedStatement pstmt = conn.prepareStatement("SELECT map_id FROM maps WHERE map_id = ? AND creator = ?")) {
+            pstmt.setInt(1, mapId);
+            pstmt.setString(2, uuid);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            logger.error("Database error in giveMap: {}", e.getMessage());
+            return false;
+        }
+    }
+
     private static void applyRenderer(MapView view, BufferedImage img) {
         view.setTrackingPosition(false);
         if (view.getClass().getDeclaredMethods().toString().contains("setLocked")) {

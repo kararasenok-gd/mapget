@@ -31,7 +31,8 @@ public class MapHandler implements BasicCommand {
                 new Help(plugin, this),
                 new Reload(plugin),
                 new Get(plugin, conn),
-                new Update(plugin)
+                new Update(plugin),
+                new space.kararasenok.mapget.commands.args.map.List(plugin, conn)
         ).forEach(arg -> argumentMap.put(arg.name().toLowerCase(), arg));
 
         this.cachedSuggestions = argumentMap.values().stream()
