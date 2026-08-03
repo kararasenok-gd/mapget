@@ -13,6 +13,8 @@ import space.kararasenok.mapget.utils.MiniMessage;
 
 import java.sql.Connection;
 import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class List implements Argument {
@@ -20,9 +22,14 @@ public class List implements Argument {
     public static final String DESC = "Shows your maps";
     public static final String LONGDESC = "Show list of maps created by you. Also can help you get the map back if you lost it";
 
+    private static final long CONFIRM_WINDOW_MS = 3000;
+
     private final Mapget plugin;
     private final Connection conn;
     private final Maps mapsClass;
+
+    private final ConcurrentHashMap<UUID, Integer> pendingDeletes = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, Long> pendingDeleteTimestamps = new ConcurrentHashMap<>();
 
     public List(Mapget plugin, Connection conn) {
         this.plugin = plugin;
@@ -111,6 +118,27 @@ public class List implements Argument {
                     player.sendMessage(MiniMessage.deserialize("<red>Failed to give you the map!"));
                 }
             } else if (Objects.equals(act, "rmv")) {
+                UUID uuid = player.getUniqueId();
+                Integer pendingMapId = pendingDeletes.get(uuid);
+                Long pendingTimestamp = pendingDeleteTimestamps.get(uuid);
+
+                boolean confirmed = pendingMapId != null && pendingMapId == mapId
+                        && pendingTimestamp != null
+                        && System.currentTimeMillis() - pendingTimestamp <= CONFIRM_WINDOW_MS;
+
+                if (!confirmed) {
+                    pendingDeletes.put(uuid, mapId);
+                    pendingDeleteTimestamps.put(uuid, System.currentTimeMillis());
+                    player.sendMessage(MiniMessage.deserialize(String.format(
+                            "<yellow>Click <red><click:run_command:'/map list rmv_%d'>[Delete]</click></red> again to confirm removing map #%d.",
+                            mapId, mapId
+                    )));
+                    return;
+                }
+
+                pendingDeletes.remove(uuid);
+                pendingDeleteTimestamps.remove(uuid);
+
                 boolean status = deleteMap(player, mapId);
 
                 if (status) {
