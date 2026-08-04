@@ -8,6 +8,7 @@ import space.kararasenok.mapget.technical.Argument;
 import space.kararasenok.mapget.commands.args.map.Get;
 import space.kararasenok.mapget.commands.args.map.Help;
 import space.kararasenok.mapget.commands.args.map.Reload;
+import space.kararasenok.mapget.commands.args.map.Remove;
 import space.kararasenok.mapget.commands.args.map.Update;
 
 import java.sql.Connection;
@@ -32,6 +33,7 @@ public class MapHandler implements BasicCommand {
                 new Reload(plugin),
                 new Get(plugin, conn),
                 new Update(plugin),
+                new Remove(plugin, conn),
                 new space.kararasenok.mapget.commands.args.map.List(plugin, conn)
         ).forEach(arg -> argumentMap.put(arg.name().toLowerCase(), arg));
 
