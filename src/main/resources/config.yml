@@ -1,73 +1,73 @@
+# mapget configuration
+# Apply changes with /map reload or by restarting the server.
+
+# --- Maps ---
 map:
-  # Should maps be stored in RAM?
-  # true = maps will be stored in RAM. After restart all maps will be cleared
-  # false = maps will be stored in database.db and local storage
-  # Default = false
+  # Store maps only in RAM. They are cleared when the server restarts.
+  # false stores maps in database.db and local storage.
+  # Default: false
   temp: false
 
-  # Default name of maps given through /map get command
-  # Variables:
-  #   %id% - ID of map
-  # Default = §6Image #%id%
+  # Default name for maps given through /map get.
+  # Available variables: %id% - map ID
+  # Default: §6Image #%id%
   name: "§6Image #%id%"
 
-  # Default lore (description) of maps.
-  # Variables:
-  #   %id% - if of map
-  #   %player% - player (his in-game name) who created this map
-  #   %url% - link to image
-  #   %timestamp% - when map was created (in UTC. Can be changed bellow). Example: 2026-05-10 14:30:05+00:00
-  # Default = §7Created by §b%player% §7at §b%timestamp%
+  # Default map lore.
+  # Available variables:
+  #   %id% - map ID
+  #   %player% - in-game name of the player who created the map
+  #   %url% - image URL
+  #   %timestamp% - creation time; see the timestamp section below
+  # Default: §7Created by §b%player% §7at §b%timestamp%
   lore: "§7Created by §b%player% §7at §b%timestamp%"
 
-  # Default value for crop argument
-  # true - Image will be cropped
-  # false - Image will be resized to 1:1 ratio
-  # Default = false
+  # Default value for the crop argument.
+  # true crops the image; false resizes it to a 1:1 ratio.
+  # Default: false
   cropDefault: false
 
-  # Allow to create temporary maps (/map get <url> temp:<true/false> or /map get <url> <crop (true/false)> <temp (true/false)>
-  # Will be ignored if temp is false or if player has mapget.temp permission
-  # true - Allow
-  # false - Disallow
-  # Default = false
+  # Allow temporary maps through /map get <url> temp:<true/false>.
+  # Players with mapget.temp permission bypass this setting.
+  # Default: false
   allowTemporaryMaps: false
 
+# --- Network ---
 connection:
-  # URL connection timeout in milliseconds.
-  # Default = 5000 ms (5 seconds)
+  # Timeout for establishing a URL connection, in milliseconds.
+  # Default: 5000 (5 seconds)
   timeout: 5000
 
-  # Connection content reading timeout in milliseconds.
-  # Default = 10000 ms (10 seconds)
+  # Timeout for reading URL content, in milliseconds.
+  # Default: 10000 (10 seconds)
   readTimeout: 10000
 
-  # Max file size in megabytes
-  # Default = 8 mb
+  # Maximum downloaded file size, in MB.
+  # Default: 8 MB
   maxSize: 8
 
+# --- Timestamps ---
 timestamp:
-  # Configuration for %timestamp% placeholder
+  # Settings for the %timestamp% placeholder.
 
-  # Format to display timestamp
-  # More information about timestamp formatting can be founded here: https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html#patterns
-  # Or here: https://gist.github.com/kararasenok-gd/c34f6121623db4febc846ad2f615996d
-  # Default = yyyy-MM-dd HH:mm:ssXXX
+  # Display format. Java DateTimeFormatter patterns:
+  # https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html#patterns
+  # Or: https://gist.github.com/kararasenok-gd/c34f6121623db4febc846ad2f615996d
+  # Default: yyyy-MM-dd HH:mm:ssXXX
   format: "yyyy-MM-dd HH:mm:ssXXX"
 
-  # UTC Offset
-  # List of offsets can be found here: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
-  # Default = +00:00
+  # UTC offset. List of time zones:
+  # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
+  # Default: +00:00
   utcOffset: "+00:00"
 
+# --- Updates ---
 updates:
-  # Should plugin check updates?
-  # Default = true
+  # Check for plugin updates.
+  # Default: true
   check: true
 
-  # Do you prefer beta or stable versions?
-  # Note: beta versions can contain bugs or even not work at all, but you will recieve new features eirler then others
-  # true - Use Beta versions
-  # false - use Stable versions
-  # Default = false
+  # Use beta releases instead of stable releases.
+  # Beta versions may contain bugs, but receive new features earlier.
+  # Default: false
   beta: false
