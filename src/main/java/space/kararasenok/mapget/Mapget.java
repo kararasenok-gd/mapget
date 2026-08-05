@@ -51,7 +51,7 @@ public final class Mapget extends JavaPlugin {
 
             commands.register(
                     "map",
-                    "mapget is a plugin that allows you to convert images into maps. Show /map help for more information.",
+                    "mapget is a plugin that allows you to convert images into maps. For more information, see /map help.",
                     new MapHandler(this, conn)
             );
         });
