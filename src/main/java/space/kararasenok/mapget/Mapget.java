@@ -16,6 +16,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.IntStream;
 
 public final class Mapget extends JavaPlugin {
     private Connection conn;
@@ -25,7 +26,7 @@ public final class Mapget extends JavaPlugin {
     public void onEnable() {
 //        logger.info("Loading plugin...");
         long startTime = Instant.now().toEpochMilli();
-        List<Integer> supportedDataVersions = List.of(4671, 4556, 4790);
+        List<Integer> supportedDataVersions = IntStream.rangeClosed(3953, 4903).boxed().toList();
 
         saveDefaultConfig();
 
