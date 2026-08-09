@@ -1,7 +1,7 @@
 name: mapget
 version: '1.3.0'
 main: space.kararasenok.mapget.Mapget
-api-version: '1.21'
+api-version: '26.1'
 
 permissions:
   mapget.reload:
