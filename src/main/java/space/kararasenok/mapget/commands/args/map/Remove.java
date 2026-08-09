@@ -63,6 +63,11 @@ public class Remove implements Argument {
                 && pendingTimestamp != null
                 && System.currentTimeMillis() - pendingTimestamp <= CONFIRM_WINDOW_MS;
 
+        if (!mapsClass.checkIfPlayerOwnsMap(player, mapId)) {
+            player.sendMessage(MiniMessage.deserialize("<red>Failed to check map ownership! Maybe you don't own this map or something went wrong (maybe map doesn't exist or database error)."));
+            return;
+        }
+
         if (!confirmed) {
             pendingDeletes.put(uuid, mapId);
             pendingDeleteTimestamps.put(uuid, System.currentTimeMillis());
@@ -75,11 +80,6 @@ public class Remove implements Argument {
 
         pendingDeletes.remove(uuid);
         pendingDeleteTimestamps.remove(uuid);
-
-        if (!mapsClass.checkIfPlayerOwnsMap(player, mapId)) {
-            player.sendMessage(MiniMessage.deserialize("<red>Failed to check map ownership! Maybe you don't own this map or something went wrong (maybe map doesn't exist or database error)."));
-            return;
-        }
 
         mapsClass.deleteMap(mapId);
         player.sendMessage(MiniMessage.deserialize("<green>Successfully deleted the map!"));
