@@ -1,5 +1,8 @@
 name: mapget
-version: '1.3.0'
+description: $description
+version: '${version}'
+authors: [ kararasenok-gd ]
+
 main: space.kararasenok.mapget.Mapget
 api-version: '26.1'
 
