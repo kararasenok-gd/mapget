@@ -93,44 +93,13 @@ public class Maps {
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
-                URL u = URI.create(url).toURL();
-                HttpURLConnection connect = (HttpURLConnection) u.openConnection();
-                connect.setRequestProperty("User-Agent", "Mozilla/5.0");
-                connect.setConnectTimeout(TIMEOUT);
-                connect.setReadTimeout(READ_TIMEOUT);
-
-                int contentLength = connect.getContentLength();
-                if (contentLength > MAX_SIZE_BYTES) {
-                    sendPlayerMessage(playerId, "<red>Image is too big (" + Math.round((double) contentLength / 1024 / 1024 * 100.0) / 100.0 + " MB > " + Math.round((double) MAX_SIZE_BYTES / 1024 / 1024 * 100.0) / 100.0 + " MB).");
-                    return;
-                }
-
-                BufferedImage image;
-                try (InputStream inputStream = connect.getInputStream()) {
-                    image = ImageIO.read(inputStream);
-                } finally {
-                    connect.disconnect();
-                }
+                BufferedImage image = downloadImage(url, TIMEOUT, READ_TIMEOUT, MAX_SIZE_BYTES);
                 if (image == null) {
                     sendPlayerMessage(playerId, "<red>Failed to create map: Invalid image.");
                     return;
                 }
 
-                int mapSize = 128;
-                BufferedImage mapImg = new BufferedImage(mapSize, mapSize, BufferedImage.TYPE_INT_ARGB);
-                Graphics2D g = mapImg.createGraphics();
-                g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-
-                int x = 0, y = 0, w = image.getWidth(), h = image.getHeight();
-                if (crop) {
-                    int minSide = Math.min(w, h);
-                    x = (w - minSide) / 2;
-                    y = (h - minSide) / 2;
-                    w = h = minSide;
-                }
-
-                g.drawImage(image, 0, 0, mapSize, mapSize, x, y, x + w, y + h, null);
-                g.dispose();
+                BufferedImage mapImg = processImage(image, crop);
 
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     Player currentPlayer = Bukkit.getPlayer(playerId);
@@ -181,11 +150,65 @@ public class Maps {
             } catch (MalformedURLException | IllegalArgumentException e) {
                 logger.error("Malformed URL: {}. Error: {}", url, e.getMessage());
                 sendPlayerMessage(playerId, "<red>Failed to create map: Invalid URL.");
+            } catch (ImageTooLargeException e) {
+                sendPlayerMessage(playerId, e.getMessage());
             } catch (IOException e) {
                 logger.error("Failed to load URL: {}. Error: {}", url, e.getMessage());
                 sendPlayerMessage(playerId, "<red>Failed to load map: IOException: " + e.getMessage());
             }
         });
+    }
+
+    private BufferedImage processImage(BufferedImage image, boolean crop) {
+        int mapSize = 128;
+        BufferedImage mapImage = new BufferedImage(mapSize, mapSize, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = mapImage.createGraphics();
+        graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+
+        int x = 0;
+        int y = 0;
+        int width = image.getWidth();
+        int height = image.getHeight();
+        if (crop) {
+            int minSide = Math.min(width, height);
+            x = (width - minSide) / 2;
+            y = (height - minSide) / 2;
+            width = height = minSide;
+        }
+
+        graphics.drawImage(image, 0, 0, mapSize, mapSize, x, y, x + width, y + height, null);
+        graphics.dispose();
+        return mapImage;
+    }
+
+    private BufferedImage downloadImage(String url, int timeout, int readTimeout, int maxSizeBytes)
+            throws IOException {
+        URL imageUrl = URI.create(url).toURL();
+        HttpURLConnection connection = (HttpURLConnection) imageUrl.openConnection();
+        connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+        connection.setConnectTimeout(timeout);
+        connection.setReadTimeout(readTimeout);
+
+        try {
+            int contentLength = connection.getContentLength();
+            if (contentLength > maxSizeBytes) {
+                throw new ImageTooLargeException(
+                        "<red>Image is too big (" + Math.round((double) contentLength / 1024 / 1024 * 100.0) / 100.0
+                                + " MB > " + Math.round((double) maxSizeBytes / 1024 / 1024 * 100.0) / 100.0 + " MB).");
+            }
+
+            try (InputStream inputStream = connection.getInputStream()) {
+                return ImageIO.read(inputStream);
+            }
+        } finally {
+            connection.disconnect();
+        }
+    }
+
+    private static class ImageTooLargeException extends IOException {
+        private ImageTooLargeException(String message) {
+            super(message);
+        }
     }
 
     private void sendPlayerMessage(UUID playerId, String message) {
