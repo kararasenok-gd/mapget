@@ -32,6 +32,10 @@ map:
   # Default: false
   allowTemporaryMaps: false
 
+  # Try to download the file again if it is not locally available.
+  # Default: true
+  tryToRecover: true
+
 # --- Network ---
 connection:
   # Timeout for establishing a URL connection, in milliseconds.

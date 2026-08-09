@@ -61,6 +61,52 @@ public class Maps {
                 File imgFile = new File(folder, path);
                 if (!imgFile.exists()) {
                     logger.warn("Image file not found for map {}: {}", id, imgFile.getAbsolutePath());
+
+                    if (plugin.getConfig().getBoolean("map.tryToRecover", true)) {
+                        logger.info("Trying to recover map {}...", id);
+                        String imageUrl = rs.getString("url");
+                        int TIMEOUT = plugin.getConfig().getInt("connection.timeout", 5000);
+                        int READ_TIMEOUT = plugin.getConfig().getInt("connection.readTimeout", 10000);
+                        int MAX_SIZE_BYTES = plugin.getConfig().getInt("connection.maxSize", 8) * 1024 * 1024;
+
+                        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                            BufferedImage img = null;
+                            try {
+                                img = downloadImage(
+                                        imageUrl,
+                                        TIMEOUT,
+                                        READ_TIMEOUT,
+                                        MAX_SIZE_BYTES
+                                );
+                            } catch (IOException e) {
+                                logger.error("Failed to download image for map {}", id, e);
+                                return;
+                            }
+
+                            if (img == null) {
+                                logger.error("Failed to recover map {}: URL does not contain a valid image", id);
+                                return;
+                            }
+
+                            BufferedImage mapImg = processImage(
+                                   img,
+                                   false // TODO: Somehow get crop parameter
+                           );
+
+                            try {
+                                if (!ImageIO.write(mapImg, "PNG", imgFile)) {
+                                    logger.error("Failed to recover map {}: PNG writer is unavailable", id);
+                                    return;
+                                }
+
+                                Bukkit.getScheduler().runTask(plugin, () -> applyRenderer(view, mapImg));
+                            } catch (IOException e) {
+                                logger.error("Failed to write image for map {}", id, e);
+                            }
+                        });
+                    }
+
+                    loaded++;
                     continue;
                 }
 
