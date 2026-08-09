@@ -25,10 +25,8 @@ import java.sql.*;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 public class Maps {
     private final JavaPlugin plugin;
@@ -70,7 +68,7 @@ public class Maps {
                         int MAX_SIZE_BYTES = plugin.getConfig().getInt("connection.maxSize", 8) * 1024 * 1024;
 
                         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                            BufferedImage img = null;
+                            BufferedImage img;
                             try {
                                 img = downloadImage(
                                         imageUrl,
@@ -285,7 +283,7 @@ public class Maps {
         MapMeta mapMeta = (MapMeta) mapItem.getItemMeta();
         if (mapMeta == null) {
             return null;
-        };
+        }
         mapMeta.setMapView(view);
 
         String mapName = plugin.getConfig().getString("map.name", "§6Image #%id%");
@@ -363,7 +361,7 @@ public class Maps {
 
     private static void applyRenderer(MapView view, BufferedImage img) {
         view.setTrackingPosition(false);
-        if (view.getClass().getDeclaredMethods().toString().contains("setLocked")) {
+        if (Arrays.toString(view.getClass().getDeclaredMethods()).contains("setLocked")) {
             view.setLocked(true);
         }
 
