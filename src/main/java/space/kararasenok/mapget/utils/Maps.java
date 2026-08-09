@@ -270,6 +270,20 @@ public class Maps {
             mapView.getRenderers().forEach(mapView::removeRenderer);
         }
 
+        MapEntry mapData = this.getMapData(mapId);
+        if (mapData == null) {
+            return;
+        }
+
+        File mapFile = new File(this.plugin.getDataFolder(), mapData.localPath());
+        if (mapFile.exists()) {
+            if (!mapFile.delete()) {
+                logger.warn("Failed to delete map file: {}", mapData.localPath());
+            }
+        } else {
+            logger.warn("Map file {} does not exist. Skipping deletion...", mapData.localPath());
+        }
+
         try (PreparedStatement pstmt = conn.prepareStatement("DELETE FROM maps WHERE map_id = ?")) {
             pstmt.setInt(1, mapId);
             pstmt.executeUpdate();
