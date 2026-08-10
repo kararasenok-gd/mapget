@@ -317,8 +317,8 @@ public class Maps {
         }
         mapMeta.setMapView(view);
 
-        String mapName = plugin.getConfig().getString("map.name", "§6Image #%id%");
-        String mapLore = plugin.getConfig().getString("map.lore", "§7Created by §b%player% §7at §b%timestamp%");
+        String mapName = plugin.getConfig().getString("map.name", "<gold>Image #%id%");
+        String mapLore = plugin.getConfig().getString("map.lore", "<gray>Created by <aqua>%player%</aqua> at <aqua>%timestamp%</aqua>");
         String utcOffset = plugin.getConfig().getString("timestamp.utcOffset", "+00:00");
         String timestampFormat =  plugin.getConfig().getString("timestamp.format", "yyyy-MM-dd HH:mm:ssXXX");
         String timestamp = OffsetDateTime.now(ZoneOffset.of(utcOffset)).format(DateTimeFormatter.ofPattern(timestampFormat));
@@ -334,8 +334,19 @@ public class Maps {
             mapLore =  mapLore.replace(entry.getKey(), entry.getValue());
         }
 
-        mapMeta.setDisplayName(mapName.replace("%id%", String.valueOf(mapId)));
-        mapMeta.setLore(List.of(mapLore.split("\n")));
+        mapMeta.displayName(
+                MiniMessage.deserialize(
+                        mapName.replace(
+                                "%id%",
+                                String.valueOf(mapId)
+                        )
+                )
+        );
+        mapMeta.lore(
+                Arrays.stream(mapLore.split("\n"))
+                        .map(MiniMessage::deserialize)
+                        .toList()
+        );
         mapItem.setItemMeta(mapMeta);
 
         return mapItem;

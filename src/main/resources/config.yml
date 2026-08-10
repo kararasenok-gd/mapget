@@ -1,6 +1,9 @@
 # mapget configuration
 # Apply changes with /map reload or by restarting the server.
 
+# All messages are in MiniMessage format.
+# Use this for preview: https://webui.advntr.dev/
+
 # --- Maps ---
 map:
   # Store maps only in RAM. They are cleared when the server restarts.
@@ -10,8 +13,8 @@ map:
 
   # Default name for maps given through /map get.
   # Available variables: %id% - map ID
-  # Default: §6Image #%id%
-  name: "§6Image #%id%"
+  # Default: <gold>Image #%id%
+  name: "<gold>Image #%id%"
 
   # Default map lore.
   # Available variables:
@@ -19,8 +22,8 @@ map:
   #   %player% - in-game name of the player who created the map
   #   %url% - image URL
   #   %timestamp% - creation time; see the timestamp section below
-  # Default: §7Created by §b%player% §7at §b%timestamp%
-  lore: "§7Created by §b%player% §7at §b%timestamp%"
+  # Default: <gray>Created by <aqua>%player%</aqua> at <aqua>%timestamp%</aqua>
+  lore: "<gray>Created by <aqua>%player%</aqua> at <aqua>%timestamp%</aqua>"
 
   # Default value for the crop argument.
   # true crops the image; false resizes it to a 1:1 ratio.
