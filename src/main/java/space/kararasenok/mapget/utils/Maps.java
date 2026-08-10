@@ -424,6 +424,7 @@ public class Maps {
     }
 
     public boolean checkIfPlayerOwnsMap(Player player, int mapId) {
+        if (player.hasPermission("mapget.bypass.ownership")) return true;
         String uuid = player.getUniqueId().toString();
 
         try (PreparedStatement pstmt = conn.prepareStatement("SELECT map_id FROM maps WHERE map_id = ? AND creator = ?")) {

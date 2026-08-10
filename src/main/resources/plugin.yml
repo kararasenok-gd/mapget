@@ -10,15 +10,29 @@ permissions:
   mapget.reload:
     description: Allows access to the /map reload command
     default: op
+
   mapget.get:
     description: Allows access to the /map get command
     default: true
+
   mapget.temp:
     description: Allows to create temporary maps even if allowTemporaryMaps setting is false
     default: op
+
   mapget.update:
     description: Allows to use /map update command
     default: op
+
+  mapget.bypass:
+    description: Allows to bypass all mapget restrictions
+    default: op
+    children:
+      mapget.bypass.ownership: true
+
+  mapget.bypass.ownership:
+    description: Allows to bypass ownership checks
+    default: op
+
   mapget.*:
     description: :P
     children:
@@ -26,3 +40,4 @@ permissions:
       mapget.get: true
       mapget.temp: true
       mapget.update: true
+      mapget.bypass: true
