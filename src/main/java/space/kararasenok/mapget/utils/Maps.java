@@ -235,7 +235,24 @@ public class Maps {
 
     private BufferedImage downloadImage(String url, int timeout, int readTimeout, int maxSizeBytes)
             throws IOException {
-        URL imageUrl = URI.create(url).toURL();
+        URI imageUri = URI.create(url);
+        String[] allowedDomains = plugin.getConfig().getStringList("connection.domainWhitelist").toArray(new String[0]);
+        boolean actAsBlacklist = plugin.getConfig().getBoolean("connection.actAsBlacklist");
+
+        if (Arrays.stream(allowedDomains).noneMatch("*"::equals)) {
+            String domain = imageUri.getAuthority();
+            if (!actAsBlacklist) {
+                if (Arrays.stream(allowedDomains).noneMatch(domain::equals)) {
+                    throw new IOException("Domain not allowed: " + domain);
+                }
+            } else {
+                if (Arrays.asList(allowedDomains).contains(domain)) {
+                    throw new IOException("Domain not allowed: " + domain);
+                }
+            }
+        }
+
+        URL imageUrl = imageUri.toURL();
         HttpURLConnection connection = (HttpURLConnection) imageUrl.openConnection();
         connection.setRequestProperty("User-Agent", "Mozilla/5.0");
         connection.setConnectTimeout(timeout);
