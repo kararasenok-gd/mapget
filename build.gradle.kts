@@ -4,26 +4,28 @@ plugins {
 }
 
 repositories {
-    mavenCentral()
-    maven("https://repo.papermc.io/repository/maven-public/")
+    maven {
+        name = "papermc"
+        url = uri("https://repo.papermc.io/repository/maven-public/")
+    }
 }
 
 dependencies {
-    implementation("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }
 
 tasks {
     runServer {
-        minecraftVersion("1.21.10")
+        minecraftVersion("26.2")
         jvmArgs("-Xms2G", "-Xmx2G")
     }
 
     processResources {
-        val props = mapOf("version" to version)
+        val props = mapOf("version" to version, "description" to project.description)
         inputs.properties(props)
 
         filesMatching("plugin.yml") {

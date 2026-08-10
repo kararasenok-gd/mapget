@@ -4,11 +4,13 @@ import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bukkit.command.CommandSender;
 import space.kararasenok.mapget.Mapget;
-import space.kararasenok.mapget.commands.Argument;
+import space.kararasenok.mapget.technical.Argument;
 import space.kararasenok.mapget.commands.args.map.Get;
 import space.kararasenok.mapget.commands.args.map.Help;
 import space.kararasenok.mapget.commands.args.map.Reload;
+import space.kararasenok.mapget.commands.args.map.Remove;
 import space.kararasenok.mapget.commands.args.map.Update;
+import space.kararasenok.mapget.utils.MiniMessage;
 
 import java.sql.Connection;
 import java.util.*;
@@ -31,7 +33,9 @@ public class MapHandler implements BasicCommand {
                 new Help(plugin, this),
                 new Reload(plugin),
                 new Get(plugin, conn),
-                new Update(plugin)
+                new Update(plugin),
+                new Remove(plugin, conn),
+                new space.kararasenok.mapget.commands.args.map.List(plugin, conn)
         ).forEach(arg -> argumentMap.put(arg.name().toLowerCase(), arg));
 
         this.cachedSuggestions = argumentMap.values().stream()
@@ -40,7 +44,7 @@ public class MapHandler implements BasicCommand {
                 .toList();
 
         String combinedArgs = String.join(" | ", cachedSuggestions);
-        this.usageMessage = "§eUsage: /map <" + combinedArgs + ">";
+        this.usageMessage = "<yellow>Usage: /map <" + combinedArgs + ">";
     }
 
     @Override
@@ -48,7 +52,7 @@ public class MapHandler implements BasicCommand {
         CommandSender sender = stack.getSender();
 
         if (args.length == 0) {
-            sender.sendMessage(usageMessage);
+            sender.sendMessage(MiniMessage.deserialize(usageMessage));
             return;
         }
 

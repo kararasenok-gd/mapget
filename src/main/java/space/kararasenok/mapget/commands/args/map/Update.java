@@ -3,7 +3,7 @@ package space.kararasenok.mapget.commands.args.map;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import space.kararasenok.mapget.Mapget;
-import space.kararasenok.mapget.commands.Argument;
+import space.kararasenok.mapget.technical.Argument;
 import space.kararasenok.mapget.utils.MiniMessage;
 import space.kararasenok.mapget.utils.Updates;
 
@@ -41,12 +41,13 @@ public class Update implements Argument {
 
         Updates.checkUpdates(plugin, plugin.getConfig().getBoolean("updates.beta", false)).thenAccept(out -> {
            if (out.hasUpdates()) {
-               String updateUrl = "https://github.com/kararasenok-gd/mapget/releases/tag/v" + out.tag();
+               String updateUrlGH = "https://github.com/kararasenok-gd/mapget/releases/tag/v" + out.tag();
+               String updateUrlMR = "https://modrinth.com/plugin/mapget/version/" + out.tag();
                sender.sendMessage(MiniMessage.deserialize(
                        String.format(
                                "<green>Updates available!</green>\n" +
-                               "You can download it here: <aqua>" + (!isConsole ? "<click:open_url:'%s'>[click!]</click>" : "%s") + "</aqua>",
-                               updateUrl
+                               "You can download it here: <aqua>" + (!isConsole ? "<click:open_url:'%s'>[<white>Git</white><gray>Hub</gray>]</click></aqua> | <aqua><click:open_url:'%s'>[<green>Mod</green><white>rinth</white>]</click>" : "GitHub: %s | Modrinth: %s") + "</aqua>",
+                               updateUrlGH, updateUrlMR
                        )
                ));
            } else {

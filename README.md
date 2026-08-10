@@ -3,8 +3,8 @@
 Simple plugin for Paper that converts images into maps
 
 ## Requirements
-- Minecraft Paper 1.21.10
-- Java 21
+- Minecraft Paper 26.2
+- Java 25
 - Gradle (for building)
 
 ## Building
@@ -32,15 +32,11 @@ The compiled `.jar` file will be located in `build/libs/`.
 `⚠️ - Not tested`
 `❌ - Not supported`
 
-> [!WARNING]
-> 1.21.X will become unsupported after update 1.3.0
-
-| Version 	| Support 	|
-|---------	|---------	|
-| 1.21.X  	| ✅       	|
-| 26.1    	| ⚠️       	|
-| 26.1.2  	| ✅       	|
-| 26.2    	| ✅        	|
+| Version 	 | Support 	 |
+|-----------|-----------|
+| 1.20.X    | ❌         |
+| 1.21.X  	 | ✅         |
+| 26.X    	 | ✅         |
 
 ## Configuration
 

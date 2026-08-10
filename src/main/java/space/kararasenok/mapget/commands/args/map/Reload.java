@@ -3,12 +3,12 @@ package space.kararasenok.mapget.commands.args.map;
 import space.kararasenok.mapget.utils.MiniMessage;
 import org.bukkit.command.CommandSender;
 import space.kararasenok.mapget.Mapget;
-import space.kararasenok.mapget.commands.Argument;
+import space.kararasenok.mapget.technical.Argument;
 
 public class Reload implements Argument {
     public static final String NAME = "reload";
     public static final String DESC = "Reloads the plugin";
-    public static final String LONGDESC = "Download and convert image into map\n\n<gold><b>Permissions:</b></gold>\nmapget.reload - Restrict updating cached configuration. By default available only for ops";
+    public static final String LONGDESC = "Reloads plugin configuration\n\n<gold><b>Permissions:</b></gold>\nmapget.reload - Restrict updating cached configuration. By default available only for ops";
     public static final String PERMS = "mapget.reload";
 
     private final Mapget plugin;
