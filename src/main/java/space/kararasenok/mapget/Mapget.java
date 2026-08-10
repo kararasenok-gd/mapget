@@ -106,6 +106,7 @@ public final class Mapget extends JavaPlugin {
                 if (out.hasUpdates()) {
                     logger.info("New update is available!");
                     logger.info("Download it here: https://github.com/kararasenok-gd/mapget/releases/tag/v{}", out.tag());
+                    logger.info("Or here: https://modrinth.com/plugin/mapget/version/{}", out.tag());
                 } else {
                     logger.info("Everything is fine. MapGet is running on latest version. Yippee :3");
                 };
