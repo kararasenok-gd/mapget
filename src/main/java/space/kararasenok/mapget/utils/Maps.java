@@ -21,6 +21,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -144,6 +146,9 @@ public class Maps {
                 }
 
                 BufferedImage mapImg = processImage(image, crop);
+                String imgHash = this.getImgHash(mapImg);
+
+                int hashMapId = checkHash(imgHash);
 
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     Player currentPlayer = Bukkit.getPlayer(playerId);
@@ -158,17 +163,20 @@ public class Maps {
 
                     int mapId = view.getId();
 
-                    String mapLocalImgFileName = "map_" + mapId + ".png";
+                    String mapLocalImgFileName = "map_" + (hashMapId == -1 ? mapId : hashMapId) + ".png";
                     File outImg = new File(folder, "images/" + mapLocalImgFileName);
                     try {
-                        ImageIO.write(mapImg, "PNG", outImg);
+                        if (!outImg.exists()) {
+                            ImageIO.write(mapImg, "PNG", outImg);
+                        }
 
                         if (useDatabase && !temp) {
-                            try (PreparedStatement pstmt = conn.prepareStatement("INSERT OR REPLACE INTO maps (creator, map_id, local_path, url) VALUES (?, ?, ?, ?)")) {
+                            try (PreparedStatement pstmt = conn.prepareStatement("INSERT OR REPLACE INTO maps (creator, map_id, local_path, url, hash) VALUES (?, ?, ?, ?, ?)")) {
                                 pstmt.setString(1, playerId.toString());
                                 pstmt.setInt(2, mapId);
                                 pstmt.setString(3, "images/" + mapLocalImgFileName);
                                 pstmt.setString(4, url);
+                                pstmt.setString(5, imgHash);
                                 pstmt.executeUpdate();
                             }
                         }
@@ -275,20 +283,29 @@ public class Maps {
             return;
         }
 
-        File mapFile = new File(this.plugin.getDataFolder(), mapData.localPath());
-        if (mapFile.exists()) {
-            if (!mapFile.delete()) {
-                logger.warn("Failed to delete map file: {}", mapData.localPath());
-            }
-        } else {
-            logger.warn("Map file {} does not exist. Skipping deletion...", mapData.localPath());
-        }
-
         try (PreparedStatement pstmt = conn.prepareStatement("DELETE FROM maps WHERE map_id = ?")) {
             pstmt.setInt(1, mapId);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             logger.error("Failed to delete map: SQLException: {}", e.getMessage());
+        }
+
+        File mapFile = new File(this.plugin.getDataFolder(), mapData.localPath());
+        boolean fileExsistDB = false;
+
+        try (PreparedStatement pstmt = conn.prepareStatement("SELECT 1 FROM maps WHERE local_path = ?")) {
+            pstmt.setString(1, mapData.localPath());
+            if (pstmt.executeQuery().next()) fileExsistDB = true;
+        } catch (SQLException e) {
+            logger.error("Failed to check local path existence: SQLException: {}", e.getMessage());
+        }
+
+        if (mapFile.exists() && !fileExsistDB) {
+            if (!mapFile.delete()) {
+                logger.warn("Failed to delete map file: {}", mapData.localPath());
+            }
+        } else {
+            logger.warn("Map file {} does not exist or it is still in database. Skipping deletion...", mapData.localPath());
         }
     }
 
@@ -330,12 +347,50 @@ public class Maps {
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (!rs.next()) { return null; }
-                return new MapEntry(rs.getString("creator"), rs.getInt("map_id"), rs.getString("url"), rs.getString("local_path"));
+                return new MapEntry(rs.getString("creator"), rs.getInt("map_id"), rs.getString("url"), rs.getString("local_path"), rs.getString("hash"));
             }
         } catch (SQLException e) {
             logger.error("Database error in getMapData: {}", e.getMessage());
         }
         return null;
+    }
+
+    private String getImgHash(BufferedImage image) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+            int[] pixels = image.getRGB(
+                    0, 0,
+                    image.getWidth(), image.getHeight(),
+                    null, 0, image.getWidth()
+            );
+
+            for (int argb : pixels) {
+                digest.update((byte) (argb >>> 24));
+                digest.update((byte) (argb >>> 16));
+                digest.update((byte) (argb >>> 8));
+                digest.update((byte) argb);
+            }
+
+            return HexFormat.of().formatHex(digest.digest());
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 is unavailable", e);
+        }
+    }
+
+    private int checkHash(String hash) {
+        try (PreparedStatement pstmt = conn.prepareStatement("SELECT map_id FROM maps WHERE hash = ?")) {
+            pstmt.setString(1, hash);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("map_id");
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Database error in checkHash: {}", e.getMessage());
+        }
+        return -1;
     }
 
     public List<MapEntry> getMapsList(Player player) {
@@ -347,7 +402,7 @@ public class Maps {
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    result.add(new MapEntry(rs.getString("creator"), rs.getInt("map_id"), rs.getString("url"), rs.getString("local_path")));
+                    result.add(new MapEntry(rs.getString("creator"), rs.getInt("map_id"), rs.getString("url"), rs.getString("local_path"), rs.getString("hash")));
                 }
             }
         } catch (SQLException e) {

@@ -47,7 +47,8 @@ public final class Mapget extends JavaPlugin {
                             new DatabaseColumn("creator", "TEXT", "NOT NULL"),
                             new DatabaseColumn("map_id", "INTEGER", "PRIMARY KEY"),
                             new DatabaseColumn("local_path", "TEXT", "NOT NULL"),
-                            new DatabaseColumn("url", "TEXT", "NOT NULL")
+                            new DatabaseColumn("url", "TEXT", "NOT NULL"),
+                            new DatabaseColumn("hash", "TEXT")
                     )
             );
 
