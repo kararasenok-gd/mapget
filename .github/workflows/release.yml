@@ -81,9 +81,19 @@ jobs:
       - name: Generate Changelog
         id: changelog
         run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           VERSION="${{ needs.check.outputs.version }}"
           REPO_URL="https://github.com/${{ github.repository }}"
+
+          if echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            PREV_TAG=$(git tag --list 'v*' --sort=-version:refname \
+              | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
+              | head -n 1 || true)
+          else
+            PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          fi
+
+          echo "Current version: v$VERSION"
+          echo "Previous tag: ${PREV_TAG:-none}"
 
           echo "## Changes for v$VERSION" > changelog_body.md
           echo "" >> changelog_body.md
@@ -94,7 +104,7 @@ jobs:
             RANGE="$PREV_TAG..HEAD"
           fi
 
-          git log $RANGE --pretty=format:"%h|%H|%s" | while IFS='|' read -r short_hash long_hash subject; do
+          git log --reverse $RANGE --pretty=format:"%h|%H|%s" | while IFS='|' read -r short_hash long_hash subject; do
             if echo "$subject" | grep -qE '^(feat|fix|refactor|perf|style|test|build|ci)(\(.*\))?:'; then
               formatted_subject=$(echo "$subject" | sed -E 's/^([a-z]+(\(.*\))?:)/**\1**/')
               echo "- [\`$short_hash\`]($REPO_URL/commit/$long_hash) $formatted_subject" >> changelog_body.md
@@ -106,7 +116,8 @@ jobs:
           fi
 
           echo "" >> changelog_body.md
-          if [ ! -z "$PREV_TAG" ]; then
+
+          if [ -n "$PREV_TAG" ]; then
             echo "**Full Changelog**: [\`$PREV_TAG...v$VERSION\`]($REPO_URL/compare/$PREV_TAG...v$VERSION)" >> changelog_body.md
           fi
 
