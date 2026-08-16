@@ -23,6 +23,7 @@ public class List implements Argument {
     public static final String LONGDESC = "Show list of maps created by you. Also can help you get the map back if you lost it";
 
     private static final long CONFIRM_WINDOW_MS = 3000;
+    private static final int MAPS_PER_PAGE = 10;
 
     private final Mapget plugin;
     private final Connection conn;
@@ -78,9 +79,9 @@ public class List implements Argument {
             sender.sendMessage(MiniMessage.deserialize("<red>Only players can execute this command!"));
             return;
         }
-        String act = null;
+        String act = "";
         int mapId = -1;
-        if (args.length >= 2) {
+        if (args.length >= 2 && args[1].matches("(get|rmv)_\\d+")) {
             act = args[1].toLowerCase();
             if (act.split("_").length > 1) {
                 mapId = Integer.parseInt(act.split("_")[1]);
@@ -89,25 +90,54 @@ public class List implements Argument {
         }
 
         if (args.length < 2 || !java.util.List.of("get", "rmv").contains(act)) {
-            java.util.List<MapEntry> maps = mapsClass.getMapsList(player);
+            int currentPage = 1;
+            if (args.length >= 2) {
+                try {
+                    currentPage = Integer.parseInt(args[1]);
+                } catch (NumberFormatException e) {
+                    player.sendMessage(MiniMessage.deserialize("<red>Invalid page number!"));
+                    return;
+                }
+            }
 
-            if (maps.isEmpty()) {
+            Maps.MapListResult firstPage = mapsClass.getMapsList(player, MAPS_PER_PAGE, 0);
+            if (firstPage.pages() == 0) {
                 player.sendMessage(MiniMessage.deserialize("<yellow>You have no maps."));
                 return;
             }
 
+            int pages = firstPage.pages();
+            if (currentPage > pages || currentPage < 1) {
+                player.sendMessage(MiniMessage.deserialize("<red>Invalid page number!"));
+                return;
+            }
+
+            java.util.List<MapEntry> maps = currentPage == 1
+                    ? firstPage.entries()
+                    : mapsClass.getMapsList(player, MAPS_PER_PAGE, (currentPage - 1) * MAPS_PER_PAGE).entries();
+
             String listText = maps.stream()
                     .map(m -> String.format(
-                            "<aqua>Image #%d</aqua> <gray>-</gray> <white><click:open_url:'%s'>%s</click></white> <green><click:run_command:'/map list get_%d'>[Give]</click></green> <red><click:run_command:'/map list rmv_%d'>[Delete]</click></red>",
+                            "<dark_gray>[<aqua>#%d</aqua>]</dark_gray> <click:open_url:'%s'><aqua>View</aqua></click> <dark_gray>•</dark_gray> <click:run_command:'/map list get_%d'><green>Give</green></click> <dark_gray>•</dark_gray> <click:run_command:'/map list rmv_%d'><red>Delete</red></click>",
                             m.mapId(),
-                            m.url(),
                             m.url(),
                             m.mapId(),
                             m.mapId()
                     ))
                     .collect(Collectors.joining("\n"));
 
-            player.sendMessage(MiniMessage.deserialize("<gold>Your maps:</gold>\n" + listText));
+            String navigation = "";
+            if (pages > 1) {
+                String previous = currentPage > 1
+                        ? String.format("<click:run_command:'/map list %d'><aqua><< Previous</aqua></click>", currentPage - 1)
+                        : "<dark_gray><< Previous</dark_gray>";
+                String next = currentPage < pages
+                        ? String.format("<click:run_command:'/map list %d'><aqua>Next >></aqua></click>", currentPage + 1)
+                        : "<dark_gray>Next >></dark_gray>";
+                navigation = String.format("\n%s <dark_gray>|</dark_gray> <gold>Page %d/%d</gold> <dark_gray>|</dark_gray> %s", previous, currentPage, pages, next);
+            }
+
+            player.sendMessage(MiniMessage.deserialize("<gold>Your maps:</gold>\n" + listText + navigation));
         } else {
             if (Objects.equals(act, "get")) {
                 boolean status = giveMap(player, mapId);
@@ -130,7 +160,7 @@ public class List implements Argument {
                     pendingDeletes.put(uuid, mapId);
                     pendingDeleteTimestamps.put(uuid, System.currentTimeMillis());
                     player.sendMessage(MiniMessage.deserialize(String.format(
-                            "<yellow>Click <red><click:run_command:'/map list rmv_%d'>[Delete]</click></red> again to confirm removing map #%d.",
+                            "<yellow>Click <red><click:run_command:'/map list rmv_%d'>Delete</click></red> again to confirm removing map #%d.",
                             mapId, mapId
                     )));
                     return;

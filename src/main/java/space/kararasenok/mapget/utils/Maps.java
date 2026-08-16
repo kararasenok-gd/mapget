@@ -174,7 +174,7 @@ public class Maps {
                         }
 
                         if (useDatabase && !temp) {
-                            try (PreparedStatement pstmt = conn.prepareStatement("INSERT OR REPLACE INTO maps (creator, map_id, local_path, url, hash, params) VALUES (?, ?, ?, ?, ?)")) {
+                            try (PreparedStatement pstmt = conn.prepareStatement("INSERT OR REPLACE INTO maps (creator, map_id, local_path, url, hash, params) VALUES (?, ?, ?, ?, ?, ?)")) {
                                 pstmt.setString(1, playerId.toString());
                                 pstmt.setInt(2, mapId);
                                 pstmt.setString(3, "images/" + mapLocalImgFileName);
@@ -433,12 +433,43 @@ public class Maps {
         return -1;
     }
 
-    public List<MapEntry> getMapsList(Player player) {
+    // why...
+
+    public record MapListResult(
+            List<MapEntry> entries,
+            int pages
+    ) {}
+
+    public MapListResult getMapsList(Player player) {
+        return getMapsList(player, 10, 0);
+    }
+
+    public MapListResult getMapsList(Player player, int limit) {
+        return getMapsList(player, limit, 0);
+    }
+
+    public MapListResult getMapsList(Player player, int limit, int offset) {
         String uuid = player.getUniqueId().toString();
         List<MapEntry> result = new ArrayList<>();
 
-        try (PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM maps WHERE creator = ?")) {
+        int allPages = 0;
+
+        try (PreparedStatement pstmt = conn.prepareStatement("SELECT COUNT(*) FROM maps WHERE creator = ?")) {
             pstmt.setString(1, uuid);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    allPages = (rs.getInt(1) + limit - 1) / limit;
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Database error while counting maps in getMapsList: {}", e.getMessage());
+        }
+
+        try (PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM maps WHERE creator = ? LIMIT ? OFFSET ?")) {
+            pstmt.setString(1, uuid);
+            pstmt.setInt(2, limit);
+            pstmt.setInt(3, offset);
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
@@ -449,8 +480,13 @@ public class Maps {
             logger.error("Database error in getMapsList: {}", e.getMessage());
         }
 
-        return result;
+        return new MapListResult(
+                result,
+                allPages
+        );
     }
+
+
 
     public boolean checkIfPlayerOwnsMap(Player player, int mapId) {
         if (player.hasPermission("mapget.bypass.ownership")) return true;
