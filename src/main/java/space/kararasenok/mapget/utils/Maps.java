@@ -248,8 +248,8 @@ public class Maps {
     private BufferedImage downloadImage(String url, int timeout, int readTimeout, int maxSizeBytes)
             throws IOException {
         URI imageUri = URI.create(url);
-        String[] allowedDomains = plugin.getConfig().getStringList("connection.domainWhitelist").toArray(new String[0]);
-        boolean actAsBlacklist = plugin.getConfig().getBoolean("connection.actAsBlacklist");
+        String[] allowedDomains = plugin.getConfig().getStringList("connection.whitelist.domains").toArray(new String[0]);
+        boolean actAsBlacklist = plugin.getConfig().getBoolean("connection.whitelist.actAsBlacklist");
 
         if (Arrays.stream(allowedDomains).noneMatch("*"::equals)) {
             String domain = imageUri.getAuthority();

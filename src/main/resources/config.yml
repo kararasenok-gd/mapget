@@ -53,17 +53,18 @@ connection:
   # Default: 8 MB
   maxSize: 8
 
-  # List of allowed domains.
-  # Add "*" to disable it.
-  # Default: ["*"]
-  domainWhitelist:
-    - "*" # Remove this to enable whitelist
-    - "files.catbox.moe"
-    - "cdn.discordapp.com"
+  whitelist:
+    # List of allowed domains.
+    # Add "*" to disable it.
+    # Default: ["*"]
+    domains:
+      - "*" # Remove this to enable whitelist
+      - "files.catbox.moe"
+      - "cdn.discordapp.com"
 
-  # Should whitelist act as blacklist?
-  # Default: false
-  actAsBlacklist: false
+    # Should whitelist act as blacklist?
+    # Default: false
+    actAsBlacklist: false
 
 # --- Timestamps ---
 timestamp:
