@@ -65,6 +65,7 @@ public class Maps {
                     if (plugin.getConfig().getBoolean("map.tryToRecover", true)) {
                         logger.info("Trying to recover map {}...", id);
                         String imageUrl = rs.getString("url");
+                        ArrayList<String> params = new ArrayList<>(Arrays.asList(rs.getString("params").split(" ")));
                         int TIMEOUT = plugin.getConfig().getInt("connection.timeout", 5000);
                         int READ_TIMEOUT = plugin.getConfig().getInt("connection.readTimeout", 10000);
                         int MAX_SIZE_BYTES = plugin.getConfig().getInt("connection.maxSize", 8) * 1024 * 1024;
@@ -88,9 +89,11 @@ public class Maps {
                                 return;
                             }
 
+                            boolean crop = params.stream().anyMatch("crop:true"::equals);
+
                             BufferedImage mapImg = processImage(
                                    img,
-                                   false // TODO: Somehow get crop parameter
+                                   crop
                            );
 
                             try {
@@ -171,12 +174,21 @@ public class Maps {
                         }
 
                         if (useDatabase && !temp) {
-                            try (PreparedStatement pstmt = conn.prepareStatement("INSERT OR REPLACE INTO maps (creator, map_id, local_path, url, hash) VALUES (?, ?, ?, ?, ?)")) {
+                            try (PreparedStatement pstmt = conn.prepareStatement("INSERT OR REPLACE INTO maps (creator, map_id, local_path, url, hash, params) VALUES (?, ?, ?, ?, ?)")) {
                                 pstmt.setString(1, playerId.toString());
                                 pstmt.setInt(2, mapId);
                                 pstmt.setString(3, "images/" + mapLocalImgFileName);
                                 pstmt.setString(4, url);
                                 pstmt.setString(5, imgHash);
+
+                                ArrayList<String> params = new ArrayList<>();
+
+                                if (crop) {
+                                    params.add("crop:true");
+                                }
+
+                                pstmt.setString(6, String.join(" ", params));
+
                                 pstmt.executeUpdate();
                             }
                         }
@@ -375,7 +387,7 @@ public class Maps {
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (!rs.next()) { return null; }
-                return new MapEntry(rs.getString("creator"), rs.getInt("map_id"), rs.getString("url"), rs.getString("local_path"), rs.getString("hash"));
+                return new MapEntry(rs.getString("creator"), rs.getInt("map_id"), rs.getString("url"), rs.getString("local_path"), rs.getString("hash"), rs.getString("params"));
             }
         } catch (SQLException e) {
             logger.error("Database error in getMapData: {}", e.getMessage());
@@ -430,7 +442,7 @@ public class Maps {
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    result.add(new MapEntry(rs.getString("creator"), rs.getInt("map_id"), rs.getString("url"), rs.getString("local_path"), rs.getString("hash")));
+                    result.add(new MapEntry(rs.getString("creator"), rs.getInt("map_id"), rs.getString("url"), rs.getString("local_path"), rs.getString("hash"), rs.getString("params")));
                 }
             }
         } catch (SQLException e) {
