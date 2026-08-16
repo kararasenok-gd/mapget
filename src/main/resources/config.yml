@@ -30,6 +30,10 @@ map:
   # Default: false
   cropDefault: false
 
+  # Maximum width or height accepted by size:<width>x<height>.
+  # Default: 5
+  maxGridSize: 5
+
   # Allow temporary maps through /map get <url> temp:<true/false>.
   # Players with mapget.temp permission bypass this setting.
   # Default: false

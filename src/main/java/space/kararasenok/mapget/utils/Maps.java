@@ -65,7 +65,10 @@ public class Maps {
                     if (plugin.getConfig().getBoolean("map.tryToRecover", true)) {
                         logger.info("Trying to recover map {}...", id);
                         String imageUrl = rs.getString("url");
-                        ArrayList<String> params = new ArrayList<>(Arrays.asList(rs.getString("params").split(" ")));
+                        String savedParams = rs.getString("params");
+                        ArrayList<String> params = savedParams == null || savedParams.isBlank()
+                                ? new ArrayList<>()
+                                : new ArrayList<>(Arrays.asList(savedParams.split(" ")));
                         int TIMEOUT = plugin.getConfig().getInt("connection.timeout", 5000);
                         int READ_TIMEOUT = plugin.getConfig().getInt("connection.readTimeout", 10000);
                         int MAX_SIZE_BYTES = plugin.getConfig().getInt("connection.maxSize", 8) * 1024 * 1024;
@@ -90,11 +93,14 @@ public class Maps {
                             }
 
                             boolean crop = params.stream().anyMatch("crop:true"::equals);
-
-                            BufferedImage mapImg = processImage(
-                                   img,
-                                   crop
-                           );
+                            int[] size = parseGridSize(params);
+                            int tile = parseTileIndex(params);
+                            List<BufferedImage> tiles = processImage(img, crop, size[0], size[1]);
+                            if (tile < 0 || tile >= tiles.size()) {
+                                logger.error("Failed to recover map {}: invalid tile index", id);
+                                return;
+                            }
+                            BufferedImage mapImg = tiles.get(tile);
 
                             try {
                                 if (!ImageIO.write(mapImg, "PNG", imgFile)) {
@@ -133,7 +139,7 @@ public class Maps {
         return loaded;
     }
 
-    public void createMap(String url, boolean crop, boolean temp, Player player) {
+    public void createMap(String url, boolean crop, boolean temp, int sizeX, int sizeY, Player player) {
         boolean useDatabase = !plugin.getConfig().getBoolean("map.temp", false);
         int TIMEOUT = plugin.getConfig().getInt("connection.timeout", 5000);
         int READ_TIMEOUT = plugin.getConfig().getInt("connection.readTimeout", 10000);
@@ -148,10 +154,7 @@ public class Maps {
                     return;
                 }
 
-                BufferedImage mapImg = processImage(image, crop);
-                String imgHash = this.getImgHash(mapImg);
-
-                int hashMapId = checkHash(imgHash);
+                List<BufferedImage> mapImages = processImage(image, crop, sizeX, sizeY);
 
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     Player currentPlayer = Bukkit.getPlayer(playerId);
@@ -159,51 +162,47 @@ public class Maps {
                         return;
                     }
 
-                    MapView view = Bukkit.createMap(currentPlayer.getWorld());
-                    view.setTrackingPosition(false);
-                    view.setUnlimitedTracking(false);
-                    view.getRenderers().forEach(view::removeRenderer);
-
-                    int mapId = view.getId();
-
-                    String mapLocalImgFileName = "map_" + (hashMapId == -1 ? mapId : hashMapId) + ".png";
-                    File outImg = new File(folder, "images/" + mapLocalImgFileName);
                     try {
-                        if (!outImg.exists()) {
-                            ImageIO.write(mapImg, "PNG", outImg);
-                        }
+                        for (int tile = 0; tile < mapImages.size(); tile++) {
+                            BufferedImage mapImg = mapImages.get(tile);
+                            String imgHash = this.getImgHash(mapImg);
+                            int hashMapId = checkHash(imgHash);
+                            MapView view = Bukkit.createMap(currentPlayer.getWorld());
+                            view.setTrackingPosition(false);
+                            view.setUnlimitedTracking(false);
+                            view.getRenderers().forEach(view::removeRenderer);
+                            int mapId = view.getId();
+                            String mapLocalImgFileName = "map_" + (hashMapId == -1 ? mapId : hashMapId) + ".png";
+                            File outImg = new File(folder, "images/" + mapLocalImgFileName);
 
-                        if (useDatabase && !temp) {
-                            try (PreparedStatement pstmt = conn.prepareStatement("INSERT OR REPLACE INTO maps (creator, map_id, local_path, url, hash, params) VALUES (?, ?, ?, ?, ?, ?)")) {
-                                pstmt.setString(1, playerId.toString());
-                                pstmt.setInt(2, mapId);
-                                pstmt.setString(3, "images/" + mapLocalImgFileName);
-                                pstmt.setString(4, url);
-                                pstmt.setString(5, imgHash);
-
-                                ArrayList<String> params = new ArrayList<>();
-
-                                if (crop) {
-                                    params.add("crop:true");
-                                }
-
-                                pstmt.setString(6, String.join(" ", params));
-
-                                pstmt.executeUpdate();
+                            if (!outImg.exists() && !ImageIO.write(mapImg, "PNG", outImg)) {
+                                throw new IOException("PNG writer is unavailable");
                             }
+
+                            if (useDatabase && !temp) {
+                                try (PreparedStatement pstmt = conn.prepareStatement("INSERT OR REPLACE INTO maps (creator, map_id, local_path, url, hash, params) VALUES (?, ?, ?, ?, ?, ?)")) {
+                                    pstmt.setString(1, playerId.toString());
+                                    pstmt.setInt(2, mapId);
+                                    pstmt.setString(3, "images/" + mapLocalImgFileName);
+                                    pstmt.setString(4, url);
+                                    pstmt.setString(5, imgHash);
+                                    ArrayList<String> params = new ArrayList<>();
+                                    if (crop) params.add("crop:true");
+                                    params.add("size:" + sizeX + "x" + sizeY);
+                                    params.add("tile:" + tile);
+                                    pstmt.setString(6, String.join(" ", params));
+                                    pstmt.executeUpdate();
+                                }
+                            }
+
+                            applyRenderer(view, mapImg);
+                            ItemStack mapItem = getMapItem(view, currentPlayer, mapId, url);
+                            if (mapItem == null) {
+                                throw new IOException("MapMeta is null");
+                            }
+                            currentPlayer.getInventory().addItem(mapItem);
                         }
-
-                        applyRenderer(view, mapImg);
-
-                        ItemStack mapItem = getMapItem(view, currentPlayer, mapId, url);
-
-                        if (mapItem == null) {
-                            currentPlayer.sendMessage(MiniMessage.deserialize("<red>Failed to create map (maybe MapMeta is null)!"));
-                            return;
-                        }
-
-                        currentPlayer.getInventory().addItem(mapItem);
-                        currentPlayer.sendMessage(MiniMessage.deserialize("<green>Map successfully created!"));
+                        currentPlayer.sendMessage(MiniMessage.deserialize("<green>" + mapImages.size() + " map(s) successfully created!"));
                     } catch (IOException e) {
                         currentPlayer.sendMessage(MiniMessage.deserialize("<red>Failed to create map: IOException: " + e.getMessage()));
                     } catch (SQLException e) {
@@ -223,10 +222,12 @@ public class Maps {
         });
     }
 
-    private BufferedImage processImage(BufferedImage image, boolean crop) {
+    private List<BufferedImage> processImage(BufferedImage image, boolean crop, int sizeX, int sizeY) {
         int mapSize = 128;
-        BufferedImage mapImage = new BufferedImage(mapSize, mapSize, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D graphics = mapImage.createGraphics();
+        int canvasWidth = mapSize * sizeX;
+        int canvasHeight = mapSize * sizeY;
+        BufferedImage canvas = new BufferedImage(canvasWidth, canvasHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = canvas.createGraphics();
         graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 
         int x = 0;
@@ -234,15 +235,54 @@ public class Maps {
         int width = image.getWidth();
         int height = image.getHeight();
         if (crop) {
-            int minSide = Math.min(width, height);
-            x = (width - minSide) / 2;
-            y = (height - minSide) / 2;
-            width = height = minSide;
+            double targetRatio = (double) canvasWidth / canvasHeight;
+            if ((double) width / height > targetRatio) {
+                int croppedWidth = (int) (height * targetRatio);
+                x = (width - croppedWidth) / 2;
+                width = croppedWidth;
+            } else {
+                int croppedHeight = (int) (width / targetRatio);
+                y = (height - croppedHeight) / 2;
+                height = croppedHeight;
+            }
         }
 
-        graphics.drawImage(image, 0, 0, mapSize, mapSize, x, y, x + width, y + height, null);
+        graphics.drawImage(image, 0, 0, canvasWidth, canvasHeight, x, y, x + width, y + height, null);
         graphics.dispose();
-        return mapImage;
+        List<BufferedImage> tiles = new ArrayList<>(sizeX * sizeY);
+        for (int tileY = 0; tileY < sizeY; tileY++) {
+            for (int tileX = 0; tileX < sizeX; tileX++) {
+                tiles.add(canvas.getSubimage(tileX * mapSize, tileY * mapSize, mapSize, mapSize));
+            }
+        }
+        return tiles;
+    }
+
+    private int[] parseGridSize(List<String> params) {
+        for (String param : params) {
+            if (!param.startsWith("size:")) continue;
+            String[] dimensions = param.substring(5).split("x", -1);
+            if (dimensions.length == 2) {
+                try {
+                    return new int[]{Integer.parseInt(dimensions[0]), Integer.parseInt(dimensions[1])};
+                } catch (NumberFormatException ignored) {
+                    break;
+                }
+            }
+        }
+        return new int[]{1, 1};
+    }
+
+    private int parseTileIndex(List<String> params) {
+        for (String param : params) {
+            if (!param.startsWith("tile:")) continue;
+            try {
+                return Integer.parseInt(param.substring(5));
+            } catch (NumberFormatException ignored) {
+                return -1;
+            }
+        }
+        return 0;
     }
 
     private BufferedImage downloadImage(String url, int timeout, int readTimeout, int maxSizeBytes)
