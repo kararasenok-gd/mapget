@@ -5,5 +5,6 @@ public record MapEntry(
         int mapId,
         String url,
         String localPath,
-        String hash
+        String hash,
+        String params
 ) {}
