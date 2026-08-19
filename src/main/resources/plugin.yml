@@ -25,13 +25,18 @@ permissions:
 
   mapget.bypass:
     description: Allows to bypass all mapget restrictions
-    default: op
+    default: false
     children:
       mapget.bypass.ownership: true
+      mapget.bypass.size: true
 
   mapget.bypass.ownership:
     description: Allows to bypass ownership checks
-    default: op
+    default: false
+
+  mapget.bypass.size:
+    description: Allows to bypass maxGridSize limit
+    default: false
 
   mapget.*:
     description: :P

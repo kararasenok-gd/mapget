@@ -12,7 +12,7 @@ import java.sql.Connection;
 public class Get implements Argument {
     public static final String NAME = "get";
     public static final String DESC = "Convert image into map";
-    public static final String LONGDESC = "Download and convert image into map\n\n<gold><b>Permissions:</b></gold>\nmapget.get - Limit map creation. By default available for everyone\nmapget.temp - Bypass restriction for creating temp maps. By default available for ops\n\n<gold><b>Usage:</b></gold>\n<aqua>/map get <url> <crop> <temp> <size></aqua> - Get one or more maps\n\n<blue><b>Note:</b></blue> You can define arguments like this: <aqua>/map get <arg>:<value></aqua>\n<blue>Examples:</blue>\n<aqua>/map get https://...</aqua> - Get one map\n<aqua>/map get https://... size:3x2</aqua> - Get a 3 by 2 map grid\n<aqua>/map get https://... sizeX:3 sizeY:2</aqua> - The same grid using separate sizes\n<blue>Argument aliases:</blue>\nurl = link = href = u\ncrop = trim = cut = c\ntemp = temporary = t\nsize = dimensions\nsizeX = width = x\nsizeY = height = y";
+    public static final String LONGDESC = "Download and convert image into map\n\n<gold><b>Permissions:</b></gold>\nmapget.get - Limit map creation. By default available for everyone\nmapget.temp - Bypass restriction for creating temp maps. By default available for op\nmapget.bypass.size - Bypass size limit\n\n<gold><b>Usage:</b></gold>\n<aqua>/map get <url> <crop> <temp> <size></aqua> - Get one or more maps\n\n<blue><b>Note:</b></blue> You can define arguments like this: <aqua>/map get <arg>:<value></aqua>\n<blue>Examples:</blue>\n<aqua>/map get https://...</aqua> - Get one map\n<aqua>/map get https://... size:3x2</aqua> - Get a 3 by 2 map grid\n<aqua>/map get https://... sizeX:3 sizeY:2</aqua> - The same grid using separate sizes\n<blue>Argument aliases:</blue>\nurl = link = href = u\ncrop = trim = cut = c\ntemp = temporary = t\nsize = dimensions\nsizeX = width = x\nsizeY = height = y";
     public static final String PERMS = "mapget.get";
 
     private final Mapget plugin;
@@ -102,7 +102,7 @@ public class Get implements Argument {
         }
 
         int maxGridSize = plugin.getConfig().getInt("map.maxGridSize", 5);
-        if (sizeX < 1 || sizeY < 1 || sizeX > maxGridSize || sizeY > maxGridSize) {
+        if ((sizeX < 1 || sizeY < 1 || sizeX > maxGridSize || sizeY > maxGridSize) && !sender.hasPermission("mapget.bypass.size")) {
             sender.sendMessage(MiniMessage.deserialize("<red>Map size must be between 1x1 and " + maxGridSize + "x" + maxGridSize + "."));
             return;
         }
